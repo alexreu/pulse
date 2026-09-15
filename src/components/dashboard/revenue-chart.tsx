@@ -1,0 +1,89 @@
+"use client";
+
+import {
+  Bar,
+  BarChart,
+  CartesianGrid,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
+import type { MonthlyRevenue } from "@/data/revenue";
+import { formatCompactCurrency, formatCurrency } from "@/lib/format";
+
+function ChartTooltip({
+  active,
+  payload,
+  label,
+}: {
+  active?: boolean;
+  payload?: Array<{ value?: number }>;
+  label?: string;
+}) {
+  if (!active || !payload?.length) return null;
+  return (
+    <div className="rounded-lg border border-border bg-surface px-3 py-2 shadow-overlay">
+      <p className="ui-label">{label} 2026</p>
+      <p data-slot="figure" className="ui-figure mt-0.5 text-lead text-foreground">
+        {formatCurrency(payload[0]?.value ?? 0)}
+      </p>
+    </div>
+  );
+}
+
+/**
+ * Le champ de colonnes réglées : une colonne par mois, une grille horizontale
+ * qui se lit, et un axe en capitales suivies. Le tableau accessible qui suit
+ * porte les mêmes chiffres pour les lecteurs d'écran.
+ */
+export function RevenueChart({ data }: { data: MonthlyRevenue[] }) {
+  return (
+    <div>
+      <div className="h-[260px] w-full sm:h-[300px]" aria-hidden>
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart data={data} margin={{ top: 8, right: 4, bottom: 0, left: -12 }} barCategoryGap="28%">
+            <CartesianGrid stroke="var(--line)" strokeWidth={1} vertical={false} />
+            <XAxis
+              dataKey="label"
+              tickLine={false}
+              axisLine={{ stroke: "var(--line)" }}
+              tick={{ fill: "var(--ink-subtle)", fontSize: 11 }}
+              dy={6}
+            />
+            <YAxis
+              tickLine={false}
+              axisLine={false}
+              width={62}
+              tickFormatter={(value: number) => formatCompactCurrency(value)}
+              tick={{ fill: "var(--ink-subtle)", fontSize: 11 }}
+            />
+            <Tooltip
+              cursor={{ fill: "var(--muted)", fillOpacity: 0.55 }}
+              content={<ChartTooltip />}
+            />
+            <Bar dataKey="revenue" fill="var(--brand)" radius={[4, 4, 0, 0]} maxBarSize={48} />
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+
+      <table className="sr-only">
+        <caption>Chiffre d&apos;affaires mensuel 2026</caption>
+        <thead>
+          <tr>
+            <th scope="col">Mois</th>
+            <th scope="col">Chiffre d&apos;affaires</th>
+          </tr>
+        </thead>
+        <tbody>
+          {data.map((entry) => (
+            <tr key={entry.month}>
+              <th scope="row">{entry.label} 2026</th>
+              <td>{formatCurrency(entry.revenue)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}

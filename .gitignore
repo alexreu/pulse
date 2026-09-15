@@ -39,3 +39,16 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# tests
+/test-results
+/playwright-report
+/blob-report
+/playwright/.cache
+
+# artefacts de travail du skill impeccable (les briefs restent versionnés)
+/.impeccable/review
+/.impeccable/refs
+/.impeccable/*.json
+/.impeccable/brief-body.md
+/.impeccable/questions
