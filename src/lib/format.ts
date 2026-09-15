@@ -75,13 +75,23 @@ export function formatDateTime(iso: string): string {
  * « Aujourd'hui », « Hier », sinon la date courte. La comparaison se fait dans
  * le fuseau d'affichage, avec la référence passée en argument pour rester
  * testable.
+ *
+ * `relative` dit si la valeur rendue est un mot ou une date : seules les dates
+ * absolues sont des mesures et prennent la fonte à chasse fixe.
  */
-export function formatRelativeDay(iso: string, now: Date = new Date()): string {
+export function formatRelativeDayParts(
+  iso: string,
+  now: Date = new Date(),
+): { label: string; relative: boolean } {
   const date = parseISO(iso);
   const options = { in: tz(DISPLAY_TIMEZONE) };
-  if (isSameDay(date, now, options)) return "Aujourd'hui";
-  if (isSameDay(date, subDays(now, 1, options), options)) return "Hier";
-  return formatShortDate(iso);
+  if (isSameDay(date, now, options)) return { label: "Aujourd'hui", relative: true };
+  if (isSameDay(date, subDays(now, 1, options), options)) return { label: "Hier", relative: true };
+  return { label: formatShortDate(iso), relative: false };
+}
+
+export function formatRelativeDay(iso: string, now: Date = new Date()): string {
+  return formatRelativeDayParts(iso, now).label;
 }
 
 export function formatInitials(firstName: string, lastName: string): string {

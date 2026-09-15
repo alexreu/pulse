@@ -13,6 +13,7 @@ const SHOTS = [
   { file: ".impeccable/review/desktop-dark.png", path: "/dashboard", w: 1440, h: 900, theme: "dark", full: true },
   { file: ".impeccable/review/desktop-detail.png", path: "/leads/LD-1001", w: 1440, h: 900, full: true },
   { file: ".impeccable/review/desktop-dialog.png", path: "/leads", w: 1440, h: 900, action: "dialog" },
+  { file: ".impeccable/review/desktop-dropdown.png", path: "/leads", w: 1440, h: 900, action: "stage" },
   { file: ".impeccable/review/desktop-clients.png", path: "/clients", w: 1440, h: 900 },
   { file: ".impeccable/review/desktop-activity.png", path: "/activity", w: 1440, h: 900 },
   { file: ".impeccable/review/desktop-settings.png", path: "/settings", w: 1440, h: 900, full: true },
@@ -53,6 +54,10 @@ for (const shot of SHOTS) {
   if (shot.action === "dialog") {
     await page.getByRole("button", { name: "Ajouter un prospect" }).click();
     await page.getByRole("dialog").waitFor();
+  }
+  if (shot.action === "stage") {
+    await page.getByRole("button", { name: /Étape/ }).click();
+    await page.getByRole("menu").waitFor();
   }
   if (shot.action === "nav") {
     await page.getByRole("button", { name: "Ouvrir la navigation" }).click();

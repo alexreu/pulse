@@ -27,10 +27,7 @@ export default async function DashboardPage() {
           description="L'état du portefeuille au 15 septembre 2026 : ce qui est encaissé, ce qui est engagé, et ce qui vient d'entrer."
         >
           <Button asChild variant="secondary">
-            <Link href="/leads">
-              Ouvrir le tableau
-              <ArrowRight className="size-4" aria-hidden />
-            </Link>
+            <Link href="/leads">Ouvrir le tableau</Link>
           </Button>
           <AddLeadDialog />
         </PageHeader>

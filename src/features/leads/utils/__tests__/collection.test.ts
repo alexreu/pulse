@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { EMPTY_FILTERS } from "../../types";
+import { formatRelativeDayParts } from "@/lib/format";
 import {
   filterLeads,
   getRecentLeads,
@@ -149,5 +150,29 @@ describe("sortLeads", () => {
 describe("getRecentLeads", () => {
   it("rend les plus récents d'abord, dans la limite demandée", () => {
     expect(getRecentLeads(LEADS, 2)).toEqual([EMMA, THOMAS]);
+  });
+});
+
+describe("formatRelativeDayParts", () => {
+  const NOW = new Date("2026-09-16T10:00:00.000Z");
+
+  it("rend un mot pour aujourd'hui et le signale comme relatif", () => {
+    expect(formatRelativeDayParts("2026-09-16T08:00:00.000Z", NOW)).toEqual({
+      label: "Aujourd'hui",
+      relative: true,
+    });
+  });
+
+  it("rend un mot pour hier", () => {
+    expect(formatRelativeDayParts("2026-09-15T08:00:00.000Z", NOW)).toEqual({
+      label: "Hier",
+      relative: true,
+    });
+  });
+
+  it("rend une date absolue au-delà, et la signale comme mesure", () => {
+    const parts = formatRelativeDayParts("2026-09-10T08:00:00.000Z", NOW);
+    expect(parts.relative).toBe(false);
+    expect(parts.label).toMatch(/^10 sept/);
   });
 });

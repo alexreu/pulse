@@ -176,7 +176,10 @@ export function LeadsTable({
           <SortButton label="Créé le" field="createdAt" sort={sort} onSortChange={onSortChange} />
         ),
         cell: ({ row }) => (
-          <time dateTime={row.original.createdAt} className="whitespace-nowrap text-muted-foreground">
+          <time
+            dateTime={row.original.createdAt}
+            className="whitespace-nowrap font-mono text-label text-muted-foreground"
+          >
             {formatShortDate(row.original.createdAt)}
           </time>
         ),
