@@ -127,7 +127,7 @@ export function ActivityFeed({ activities }: { activities: Activity[] }) {
 
                     <time
                       dateTime={entry.createdAt}
-                      className="mt-1 block text-label text-subtle"
+                      className="mt-1 block font-mono text-label text-subtle"
                     >
                       {formatDateTime(entry.createdAt)}
                     </time>

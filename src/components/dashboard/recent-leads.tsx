@@ -21,8 +21,10 @@ export function RecentLeads({ leads, limit = 6 }: { leads: Lead[]; limit?: numbe
               <span className="block truncate text-body font-medium text-foreground">
                 {formatFullName(lead.firstName, lead.lastName)}
               </span>
-              <span className="block truncate text-label text-subtle">
-                {lead.company}
+              <span className="block truncate text-label text-subtle">{lead.company}</span>
+              {/* Sous 640 px la ligne se replie, mais l'étape reste écrite. */}
+              <span className="mt-1.5 block sm:hidden">
+                <LeadStatusBadge status={lead.status} />
               </span>
             </span>
 

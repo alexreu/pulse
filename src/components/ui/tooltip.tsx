@@ -19,7 +19,7 @@ export function TooltipContent({
         sideOffset={sideOffset}
         className={cn(
           "z-50 max-w-64 rounded-md border border-border bg-surface px-2.5 py-1.5 text-label text-foreground",
-          "shadow-lifted",
+          "shadow-card",
           className,
         )}
         {...props}

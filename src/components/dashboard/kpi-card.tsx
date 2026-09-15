@@ -1,5 +1,4 @@
 import * as React from "react";
-import type { LucideIcon } from "lucide-react";
 import { Trend } from "@/components/common/trend";
 import { cn } from "@/lib/utils";
 
@@ -10,26 +9,17 @@ interface KpiCardProps {
   detail: string;
   trend: number;
   comparedTo: string;
-  icon: LucideIcon;
   className?: string;
 }
 
-/** Un indicateur : étiquette discrète, chiffre tabulaire serré, évolution. */
-export function KpiCard({
-  label,
-  value,
-  detail,
-  trend,
-  comparedTo,
-  icon: Icon,
-  className,
-}: KpiCardProps) {
+/**
+ * Un indicateur : étiquette discrète, chiffre tabulaire serré, évolution.
+ * Aucune icône : elle n'ajouterait rien qu'une décoration à côté du chiffre.
+ */
+export function KpiCard({ label, value, detail, trend, comparedTo, className }: KpiCardProps) {
   return (
     <div className={cn("flex flex-col gap-3 p-5", className)}>
-      <div className="flex items-center justify-between gap-3">
-        <h3 className="ui-label">{label}</h3>
-        <Icon className="size-4 shrink-0 text-subtle" aria-hidden />
-      </div>
+      <h3 className="ui-label">{label}</h3>
 
       <div>
         <p data-slot="figure" className="ui-figure text-figure text-foreground">

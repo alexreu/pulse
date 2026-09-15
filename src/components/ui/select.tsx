@@ -48,7 +48,7 @@ export function SelectContent({
         position={position}
         className={cn(
           "relative z-50 max-h-72 min-w-[var(--radix-select-trigger-width)] overflow-hidden rounded-md border border-border bg-surface",
-          "shadow-overlay",
+          "shadow-lifted",
           "data-[state=open]:animate-in data-[state=open]:fade-in-0",
           "data-[state=closed]:animate-out data-[state=closed]:fade-out-0",
           className,

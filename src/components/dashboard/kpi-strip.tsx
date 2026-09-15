@@ -1,4 +1,3 @@
-import { Euro, Percent, Target, Wallet } from "lucide-react";
 import { MONTHLY_REVENUE, PREVIOUS_PERIOD } from "@/data/revenue";
 import type { Lead } from "@/features/leads/types";
 import {
@@ -27,28 +26,24 @@ export function KpiStrip({ leads }: { leads: Lead[] }) {
       value: formatCurrency(currentMonth.revenue),
       detail: `Encaissé en ${currentMonth.label.replace(".", "").toLocaleLowerCase("fr-FR")} 2026`,
       trend: calculateTrend(currentMonth.revenue, PREVIOUS_PERIOD.revenue),
-      icon: Euro,
     },
     {
       label: "Pipeline",
       value: formatCurrency(pipeline),
       detail: "Montant des affaires ouvertes",
       trend: calculateTrend(pipeline, PREVIOUS_PERIOD.pipelineValue),
-      icon: Wallet,
     },
     {
       label: "Prospects",
       value: formatNumber(leads.length),
       detail: "Fiches suivies dans la base",
       trend: calculateTrend(leads.length, PREVIOUS_PERIOD.leadCount),
-      icon: Target,
     },
     {
       label: "Conversion",
       value: formatPercent(conversion),
       detail: "Part des prospects signés",
       trend: calculateTrend(conversion, PREVIOUS_PERIOD.conversionRate),
-      icon: Percent,
     },
   ];
 
@@ -66,7 +61,6 @@ export function KpiStrip({ leads }: { leads: Lead[] }) {
             detail={item.detail}
             trend={item.trend}
             comparedTo={COMPARED_TO}
-            icon={item.icon}
             className="bg-surface"
           />
         ))}

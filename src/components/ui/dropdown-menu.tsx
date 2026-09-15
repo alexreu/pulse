@@ -20,7 +20,7 @@ export function DropdownMenuContent({
         sideOffset={sideOffset}
         className={cn(
           "z-50 min-w-48 overflow-hidden rounded-md border border-border bg-surface p-1",
-          "shadow-overlay",
+          "shadow-lifted",
           "data-[state=open]:animate-in data-[state=open]:fade-in-0",
           "data-[state=closed]:animate-out data-[state=closed]:fade-out-0",
           className,

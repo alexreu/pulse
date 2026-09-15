@@ -55,7 +55,7 @@ export function LeadTimeline({ activities }: { activities: Activity[] }) {
                 <span className="text-body font-medium text-foreground">
                   {ACTIVITY_LABELS[activity.type]}
                 </span>
-                <time dateTime={activity.createdAt} className="text-label text-subtle">
+                <time dateTime={activity.createdAt} className="font-mono text-label text-subtle">
                   {formatDateTime(activity.createdAt)}
                 </time>
               </div>

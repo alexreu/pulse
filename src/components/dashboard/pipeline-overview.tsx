@@ -30,7 +30,9 @@ export function PipelineOverview({ leads }: { leads: Lead[] }) {
                   {config.label}
                 </span>
                 <span className="flex items-baseline gap-3">
-                  <span className="text-label text-subtle">{formatCurrency(stage.value)}</span>
+                  <span data-slot="figure" className="ui-figure text-label text-subtle">
+                    {formatCurrency(stage.value)}
+                  </span>
                   <span
                     data-slot="figure"
                     className="ui-figure w-8 text-right text-body text-foreground"

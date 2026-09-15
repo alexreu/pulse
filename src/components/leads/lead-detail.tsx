@@ -146,6 +146,10 @@ export function LeadDetail({ lead: initialLead, initialActivities }: LeadDetailP
             <p className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-body text-muted-foreground">
               <span>{lead.company}</span>
               <LeadStatusBadge status={lead.status} />
+              <span className="font-mono text-label text-subtle">
+                <span className="sr-only">Référence&nbsp;</span>
+                {lead.id}
+              </span>
             </p>
           </div>
 
@@ -230,7 +234,10 @@ export function LeadDetail({ lead: initialLead, initialActivities }: LeadDetailP
                     <li key={entry.id} className="py-3">
                       <div className="flex flex-wrap items-baseline gap-x-2">
                         <span className="text-body font-medium text-foreground">{entry.author}</span>
-                        <time dateTime={entry.createdAt} className="text-label text-subtle">
+                        <time
+                          dateTime={entry.createdAt}
+                          className="font-mono text-label text-subtle"
+                        >
                           {formatDateTime(entry.createdAt)}
                         </time>
                       </div>
@@ -299,12 +306,16 @@ export function LeadDetail({ lead: initialLead, initialActivities }: LeadDetailP
             </InfoRow>
 
             <InfoRow icon={CalendarDays} label="Créé le">
-              <time dateTime={lead.createdAt}>{formatDate(lead.createdAt)}</time>
+              <time dateTime={lead.createdAt} className="font-mono text-label">
+                {formatDate(lead.createdAt)}
+              </time>
             </InfoRow>
 
             <InfoRow icon={Clock} label="Dernier contact">
               {lead.lastContactAt ? (
-                <time dateTime={lead.lastContactAt}>{formatDateTime(lead.lastContactAt)}</time>
+                <time dateTime={lead.lastContactAt} className="font-mono text-label">
+                  {formatDateTime(lead.lastContactAt)}
+                </time>
               ) : (
                 <span className="text-muted-foreground">Aucun échange enregistré</span>
               )}
