@@ -59,7 +59,7 @@ export function RevenueChart({ data }: { data: MonthlyRevenue[] }) {
               tick={{ fill: "var(--ink-subtle)", fontSize: 11 }}
             />
             <Tooltip
-              cursor={{ fill: "var(--muted)", fillOpacity: 0.55 }}
+              cursor={{ fill: "var(--brand-tint)" }}
               content={<ChartTooltip />}
             />
             <Bar dataKey="revenue" fill="var(--brand)" radius={[4, 4, 0, 0]} maxBarSize={48} />

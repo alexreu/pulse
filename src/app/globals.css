@@ -19,7 +19,7 @@
   /* Encres */
   --ink: oklch(0.1875 0.02 278);
   --ink-muted: oklch(0.495 0.017 278);
-  --ink-subtle: oklch(0.552 0.016 278);
+  --ink-subtle: oklch(0.505 0.017 278);
 
   /* Filets */
   --line: oklch(0.912 0.007 278);
@@ -43,8 +43,8 @@
   --warning-tint: oklch(0.54 0.14 62 / 0.12);
   --success: oklch(0.5 0.13 155);
   --success-tint: oklch(0.5 0.13 155 / 0.1);
-  --danger: oklch(0.53 0.2 27.325);
-  --danger-tint: oklch(0.53 0.2 27.325 / 0.1);
+  --danger: oklch(0.5 0.21 27.325);
+  --danger-tint: oklch(0.5 0.21 27.325 / 0.1);
 
   --scrim: oklch(0.1875 0.02 278 / 0.4);
 
@@ -90,8 +90,8 @@
   --warning-tint: oklch(0.78 0.13 70 / 0.16);
   --success: oklch(0.74 0.14 155);
   --success-tint: oklch(0.74 0.14 155 / 0.16);
-  --danger: oklch(0.72 0.17 25);
-  --danger-tint: oklch(0.72 0.17 25 / 0.16);
+  --danger: oklch(0.77 0.16 25);
+  --danger-tint: oklch(0.77 0.16 25 / 0.16);
 
   --scrim: oklch(0 0 0 / 0.65);
 
