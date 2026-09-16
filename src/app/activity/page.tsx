@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { listActivities } from "@/features/leads/api/repository";
-import { Panel } from "@/components/ui/panel";
+import {
+  Card,
+} from "@/components/ui/card";
 import { ActivityFeed } from "@/components/activity/activity-feed";
 import { PageHeader } from "@/components/layout/page-header";
 
@@ -17,9 +19,9 @@ export default async function ActivityPage() {
         description="Tout ce qui s'est passé sur le portefeuille, du plus récent au plus ancien : créations, changements d'étape, notes, e-mails et rendez-vous."
       />
 
-      <Panel>
+      <Card>
         <ActivityFeed activities={activities} />
-      </Panel>
+      </Card>
     </div>
   );
 }

@@ -9,7 +9,13 @@ import { LEAD_STATUSES, type Activity, type Lead, type LeadStatus } from "@/feat
 import { STATUS_CONFIG } from "@/features/leads/utils/status";
 import { formatCurrency, formatDate, formatDateTime, formatFullName } from "@/lib/format";
 import { Button } from "@/components/ui/button";
-import { Panel, PanelBody, PanelHeader, PanelTitle } from "@/components/ui/panel";
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import {
   Select,
   SelectContent,
@@ -183,15 +189,16 @@ export function LeadDetail({ lead: initialLead, initialActivities }: LeadDetailP
 
       <div className="grid gap-5 xl:grid-cols-3">
         <div className="space-y-5 xl:col-span-2">
-          <Panel>
-            <PanelHeader>
-              <PanelTitle>Notes</PanelTitle>
+          <Card>
+            <CardHeader className="border-b">
+              <CardTitle>Notes</CardTitle>
+          <CardAction>
               <p className="text-label text-muted-foreground">
                 {notes.length} note{notes.length > 1 ? "s" : ""}
-              </p>
-            </PanelHeader>
+              </p></CardAction>
+        </CardHeader>
 
-            <PanelBody className="space-y-4">
+            <CardContent className="space-y-4">
               <form onSubmit={submitNote} className="space-y-2">
                 <label htmlFor="new-note" className="ui-label block font-medium text-foreground">
                   Ajouter une note
@@ -211,7 +218,7 @@ export function LeadDetail({ lead: initialLead, initialActivities }: LeadDetailP
                   </p>
                 ) : null}
                 <div className="flex justify-end">
-                  <Button type="submit" variant="primary" size="sm" disabled={notePending}>
+                  <Button type="submit" variant="default" size="sm" disabled={notePending}>
                     {notePending ? (
                       <>
                         <Loader2 className="size-4 animate-spin" aria-hidden />
@@ -246,15 +253,16 @@ export function LeadDetail({ lead: initialLead, initialActivities }: LeadDetailP
                   ))}
                 </ol>
               )}
-            </PanelBody>
-          </Panel>
+            </CardContent>
+          </Card>
 
-          <Panel>
-            <PanelHeader>
-              <PanelTitle>Historique</PanelTitle>
-              <p className="text-label text-muted-foreground">{activities.length} évènements</p>
-            </PanelHeader>
-            <PanelBody>
+          <Card>
+            <CardHeader className="border-b">
+              <CardTitle>Historique</CardTitle>
+          <CardAction>
+              <p className="text-label text-muted-foreground">{activities.length} évènements</p></CardAction>
+        </CardHeader>
+            <CardContent>
               {activities.length === 0 ? (
                 <EmptyState
                   icon={Clock}
@@ -264,14 +272,14 @@ export function LeadDetail({ lead: initialLead, initialActivities }: LeadDetailP
               ) : (
                 <LeadTimeline activities={activities} />
               )}
-            </PanelBody>
-          </Panel>
+            </CardContent>
+          </Card>
         </div>
 
-        <Panel className="h-fit">
-          <PanelHeader>
-            <PanelTitle>Informations</PanelTitle>
-          </PanelHeader>
+        <Card className="h-fit">
+          <CardHeader className="border-b">
+            <CardTitle>Informations</CardTitle>
+          </CardHeader>
           <dl className="divide-y divide-border">
             <InfoRow icon={Mail} label="E-mail">
               <a
@@ -321,7 +329,7 @@ export function LeadDetail({ lead: initialLead, initialActivities }: LeadDetailP
               )}
             </InfoRow>
           </dl>
-        </Panel>
+        </Card>
       </div>
     </div>
   );

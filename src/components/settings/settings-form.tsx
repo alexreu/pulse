@@ -8,7 +8,13 @@ import { setDemoFailure } from "@/features/leads/api/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Panel, PanelBody, PanelHeader, PanelTitle } from "@/components/ui/panel";
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import {
   Select,
@@ -111,11 +117,11 @@ export function SettingsForm() {
 
   return (
     <div className="grid gap-6 lg:grid-cols-2">
-      <Panel className="lg:col-span-2">
-        <PanelHeader>
-          <PanelTitle>Profil</PanelTitle>
-        </PanelHeader>
-        <PanelBody>
+      <Card className="lg:col-span-2">
+        <CardHeader className="border-b">
+          <CardTitle>Profil</CardTitle>
+        </CardHeader>
+        <CardContent>
           <form onSubmit={saveProfile} className="space-y-4">
             <div className="grid gap-4 sm:grid-cols-3">
               <div className="space-y-1.5">
@@ -148,18 +154,18 @@ export function SettingsForm() {
             </div>
 
             <div className="flex justify-end">
-              <Button type="submit" variant="primary" disabled={saving}>
+              <Button type="submit" variant="default" disabled={saving}>
                 {saving ? "Enregistrement…" : "Enregistrer le profil"}
               </Button>
             </div>
           </form>
-        </PanelBody>
-      </Panel>
+        </CardContent>
+      </Card>
 
-      <Panel>
-        <PanelHeader>
-          <PanelTitle>Préférences</PanelTitle>
-        </PanelHeader>
+      <Card>
+        <CardHeader className="border-b">
+          <CardTitle>Préférences</CardTitle>
+        </CardHeader>
         <div className="divide-y divide-border">
           <SettingRow
             title="Langue"
@@ -224,12 +230,12 @@ export function SettingsForm() {
             }
           />
         </div>
-      </Panel>
+      </Card>
 
-      <Panel>
-        <PanelHeader>
-          <PanelTitle>Notifications</PanelTitle>
-        </PanelHeader>
+      <Card>
+        <CardHeader className="border-b">
+          <CardTitle>Notifications</CardTitle>
+        </CardHeader>
         <div className="divide-y divide-border">
           {NOTIFICATIONS.map((entry) => (
             <SettingRow
@@ -253,15 +259,16 @@ export function SettingsForm() {
             />
           ))}
         </div>
-      </Panel>
+      </Card>
 
-      <Panel className="lg:col-span-2">
-        <PanelHeader>
-          <PanelTitle>Démonstration</PanelTitle>
+      <Card className="lg:col-span-2">
+        <CardHeader className="border-b">
+          <CardTitle>Démonstration</CardTitle>
+          <CardAction>
           <p className="text-label text-muted-foreground">
             Pour montrer les états d&apos;erreur sans casser quoi que ce soit.
-          </p>
-        </PanelHeader>
+          </p></CardAction>
+        </CardHeader>
         <div className="divide-y divide-border">
           <SettingRow
             title="Simuler une erreur serveur"
@@ -280,7 +287,7 @@ export function SettingsForm() {
             }
           />
         </div>
-      </Panel>
+      </Card>
     </div>
   );
 }

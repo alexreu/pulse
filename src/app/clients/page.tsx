@@ -6,7 +6,9 @@ import { getClients } from "@/features/leads/utils/metrics";
 import { sortLeads } from "@/features/leads/utils/collection";
 import { formatCurrency } from "@/lib/format";
 import { Button } from "@/components/ui/button";
-import { Panel } from "@/components/ui/panel";
+import {
+  Card,
+} from "@/components/ui/card";
 import { EmptyState } from "@/components/common/empty-state";
 import { ClientsTable } from "@/components/clients/clients-table";
 import { PageHeader } from "@/components/layout/page-header";
@@ -28,18 +30,18 @@ export default async function ClientsPage() {
       />
 
       {clients.length === 0 ? (
-        <Panel>
+        <Card>
           <EmptyState
             icon={Users}
             title="Aucun client pour l'instant."
             description="Dès qu'un prospect passe à l'étape « Gagné », sa fiche apparaît ici avec son chiffre d'affaires."
             action={
-              <Button asChild variant="primary">
+              <Button asChild variant="default">
                 <Link href="/leads">Ouvrir le tableau des prospects</Link>
               </Button>
             }
           />
-        </Panel>
+        </Card>
       ) : (
         <>
           {/* Le résumé du portefeuille client, avant le détail ligne à ligne. */}
@@ -67,9 +69,9 @@ export default async function ClientsPage() {
             ))}
           </dl>
 
-          <Panel>
+          <Card>
             <ClientsTable clients={clients} />
-          </Panel>
+          </Card>
         </>
       )}
     </div>

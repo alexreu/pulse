@@ -1,4 +1,6 @@
-import { Panel } from "@/components/ui/panel";
+import {
+  Card,
+} from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function ActivityLoading() {
@@ -11,7 +13,7 @@ export default function ActivityLoading() {
         <Skeleton className="h-5 w-[42rem] max-w-full" />
       </div>
 
-      <Panel>
+      <Card>
         <div className="flex flex-wrap gap-1.5 border-b border-border p-3">
           {[64, 140, 72, 108].map((width, index) => (
             <Skeleton key={index} className="h-7 rounded-full" style={{ width }} />
@@ -29,7 +31,7 @@ export default function ActivityLoading() {
             </div>
           ))}
         </div>
-      </Panel>
+      </Card>
     </div>
   );
 }

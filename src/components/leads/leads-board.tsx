@@ -17,7 +17,9 @@ import {
 import { filterLeads, sortLeads } from "@/features/leads/utils/collection";
 import { STATUS_CONFIG } from "@/features/leads/utils/status";
 import { Button } from "@/components/ui/button";
-import { Panel } from "@/components/ui/panel";
+import {
+  Card,
+} from "@/components/ui/card";
 import { EmptyState } from "@/components/common/empty-state";
 import { AddLeadDialog } from "./add-lead-dialog";
 import { BulkActionsBar } from "./bulk-actions-bar";
@@ -111,7 +113,7 @@ export function LeadsBoard() {
   const hasLeads = leads.length > 0;
 
   return (
-    <Panel>
+    <Card>
       {selectedIds.length > 0 ? (
         <BulkActionsBar
           count={selectedIds.length}
@@ -159,7 +161,7 @@ export function LeadsBoard() {
               action={
                 <AddLeadDialog
                   trigger={
-                    <Button variant="primary">
+                    <Button variant="default">
                       <Plus className="size-4" aria-hidden />
                       Ajouter votre premier prospect
                     </Button>
@@ -170,6 +172,6 @@ export function LeadsBoard() {
           )
         }
       />
-    </Panel>
+    </Card>
   );
 }

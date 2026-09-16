@@ -1,4 +1,6 @@
-import { Panel } from "@/components/ui/panel";
+import {
+  Card,
+} from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function ClientsLoading() {
@@ -21,7 +23,7 @@ export default function ClientsLoading() {
         ))}
       </div>
 
-      <Panel>
+      <Card>
         <div className="divide-y divide-border">
           <div className="flex items-center gap-4 bg-sunk/60 px-3 py-3">
             <Skeleton className="h-3 w-28" />
@@ -37,7 +39,7 @@ export default function ClientsLoading() {
             </div>
           ))}
         </div>
-      </Panel>
+      </Card>
     </div>
   );
 }

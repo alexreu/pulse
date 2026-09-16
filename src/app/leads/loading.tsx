@@ -1,9 +1,11 @@
-import { Panel } from "@/components/ui/panel";
+import {
+  Card,
+} from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function LeadsLoading() {
   return (
-    <Panel aria-busy="true" aria-live="polite">
+    <Card aria-busy="true" aria-live="polite">
       <span className="sr-only">Chargement des prospects…</span>
 
       <div className="flex flex-wrap items-center gap-2 border-b border-border p-3">
@@ -35,6 +37,6 @@ export default function LeadsLoading() {
         <Skeleton className="h-8 w-40" />
         <Skeleton className="h-8 w-48" />
       </div>
-    </Panel>
+    </Card>
   );
 }

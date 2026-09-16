@@ -1,4 +1,8 @@
-import { Panel, PanelBody, PanelHeader } from "@/components/ui/panel";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+} from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function LeadDetailLoading() {
@@ -19,11 +23,11 @@ export default function LeadDetailLoading() {
 
       <div className="grid gap-5 xl:grid-cols-3">
         <div className="space-y-5 xl:col-span-2">
-          <Panel>
-            <PanelHeader>
+          <Card>
+            <CardHeader className="border-b">
               <Skeleton className="h-4 w-20" />
-            </PanelHeader>
-            <PanelBody className="space-y-4">
+            </CardHeader>
+            <CardContent className="space-y-4">
               <Skeleton className="h-20 w-full" />
               {Array.from({ length: 2 }).map((_, index) => (
                 <div key={index} className="space-y-2 border-t border-border pt-4">
@@ -31,14 +35,14 @@ export default function LeadDetailLoading() {
                   <Skeleton className="h-4 w-full max-w-lg" />
                 </div>
               ))}
-            </PanelBody>
-          </Panel>
+            </CardContent>
+          </Card>
 
-          <Panel>
-            <PanelHeader>
+          <Card>
+            <CardHeader className="border-b">
               <Skeleton className="h-4 w-24" />
-            </PanelHeader>
-            <PanelBody className="space-y-5">
+            </CardHeader>
+            <CardContent className="space-y-5">
               {Array.from({ length: 4 }).map((_, index) => (
                 <div key={index} className="flex gap-3">
                   <Skeleton className="size-7 shrink-0 rounded-full" />
@@ -48,14 +52,14 @@ export default function LeadDetailLoading() {
                   </div>
                 </div>
               ))}
-            </PanelBody>
-          </Panel>
+            </CardContent>
+          </Card>
         </div>
 
-        <Panel className="h-fit">
-          <PanelHeader>
+        <Card className="h-fit">
+          <CardHeader className="border-b">
             <Skeleton className="h-4 w-28" />
-          </PanelHeader>
+          </CardHeader>
           <div className="divide-y divide-border">
             {Array.from({ length: 6 }).map((_, index) => (
               <div key={index} className="space-y-1.5 px-4 py-3">
@@ -64,7 +68,7 @@ export default function LeadDetailLoading() {
               </div>
             ))}
           </div>
-        </Panel>
+        </Card>
       </div>
     </div>
   );

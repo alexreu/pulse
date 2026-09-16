@@ -1,4 +1,8 @@
-import { Panel, PanelBody, PanelHeader } from "@/components/ui/panel";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+} from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function DashboardLoading() {
@@ -25,23 +29,23 @@ export default function DashboardLoading() {
       </div>
 
       <div className="grid gap-5 xl:grid-cols-3">
-        <Panel className="xl:col-span-2">
-          <PanelHeader>
+        <Card className="xl:col-span-2">
+          <CardHeader className="border-b">
             <Skeleton className="h-3 w-56" />
-          </PanelHeader>
-          <PanelBody>
+          </CardHeader>
+          <CardContent>
             <div className="flex h-[260px] items-end gap-3 sm:h-[300px]">
               {[42, 50, 46, 60, 72, 86, 80, 100].map((height, index) => (
                 <Skeleton key={index} className="flex-1" style={{ height: `${height}%` }} />
               ))}
             </div>
-          </PanelBody>
-        </Panel>
+          </CardContent>
+        </Card>
 
-        <Panel>
-          <PanelHeader>
+        <Card>
+          <CardHeader className="border-b">
             <Skeleton className="h-3 w-36" />
-          </PanelHeader>
+          </CardHeader>
           <div className="divide-y divide-border">
             {Array.from({ length: 5 }).map((_, index) => (
               <div key={index} className="space-y-2 px-4 py-3">
@@ -53,13 +57,13 @@ export default function DashboardLoading() {
               </div>
             ))}
           </div>
-        </Panel>
+        </Card>
       </div>
 
-      <Panel>
-        <PanelHeader>
+      <Card>
+        <CardHeader className="border-b">
           <Skeleton className="h-3 w-40" />
-        </PanelHeader>
+        </CardHeader>
         <div className="divide-y divide-border">
           {Array.from({ length: 6 }).map((_, index) => (
             <div key={index} className="flex items-center gap-3 px-4 py-3">
@@ -72,7 +76,7 @@ export default function DashboardLoading() {
             </div>
           ))}
         </div>
-      </Panel>
+      </Card>
     </div>
   );
 }

@@ -1,11 +1,11 @@
-"use client";
+"use client"
 
-import * as React from "react";
-import * as CheckboxPrimitive from "@radix-ui/react-checkbox";
-import { Check, Minus } from "lucide-react";
-import { cn } from "@/lib/utils";
+import * as React from "react"
+import { cn } from "@/lib/utils"
+import { Checkbox as CheckboxPrimitive } from "radix-ui"
+import { CheckIcon } from "lucide-react"
 
-export function Checkbox({
+function Checkbox({
   className,
   ...props
 }: React.ComponentProps<typeof CheckboxPrimitive.Root>) {
@@ -13,23 +13,20 @@ export function Checkbox({
     <CheckboxPrimitive.Root
       data-slot="checkbox"
       className={cn(
-        "peer size-4 shrink-0 rounded-[0.25rem] border border-line-strong bg-surface shadow-subtle",
-        "transition-[background-color,border-color] duration-150 ease-out-soft",
-        "hover:border-primary",
-        "data-[state=checked]:border-primary data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground",
-        "data-[state=indeterminate]:border-primary data-[state=indeterminate]:bg-primary data-[state=indeterminate]:text-primary-foreground",
-        "disabled:cursor-not-allowed disabled:opacity-50",
-        className,
+        "peer relative flex size-4 shrink-0 items-center justify-center rounded-[4px] border border-input transition-colors outline-none group-has-disabled/field:opacity-50 group-has-[:focus-visible]/field-label:ring-0 group-has-[:focus-visible]/field-label:not-data-checked:border-input after:absolute after:-inset-x-3 after:-inset-y-2 focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 aria-invalid:aria-checked:border-primary dark:bg-input/30 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 data-checked:border-primary data-checked:bg-primary data-checked:text-primary-foreground group-has-[:focus-visible]/field-label:data-checked:border-primary dark:data-checked:bg-primary",
+        className
       )}
       {...props}
     >
-      <CheckboxPrimitive.Indicator className="flex items-center justify-center text-current">
-        {props.checked === "indeterminate" ? (
-          <Minus className="size-3" strokeWidth={3} aria-hidden />
-        ) : (
-          <Check className="size-3" strokeWidth={3} aria-hidden />
-        )}
+      <CheckboxPrimitive.Indicator
+        data-slot="checkbox-indicator"
+        className="grid place-content-center text-current transition-none [&>svg]:size-3.5"
+      >
+        <CheckIcon
+        />
       </CheckboxPrimitive.Indicator>
     </CheckboxPrimitive.Root>
-  );
+  )
 }
+
+export { Checkbox }

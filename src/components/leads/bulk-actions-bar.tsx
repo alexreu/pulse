@@ -73,7 +73,7 @@ export function BulkActionsBar({
         </DropdownMenu>
 
         <Button
-          variant="danger"
+          variant="destructive"
           size="sm"
           type="button"
           onClick={onDelete}

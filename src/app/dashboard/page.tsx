@@ -10,7 +10,13 @@ import { PipelineOverview } from "@/components/dashboard/pipeline-overview";
 import { RecentLeads } from "@/components/dashboard/recent-leads";
 import { RevenueChart } from "@/components/dashboard/revenue-chart";
 import { PageHeader } from "@/components/layout/page-header";
-import { Panel, PanelBody, PanelHeader, PanelTitle } from "@/components/ui/panel";
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
 export const metadata: Metadata = { title: "Vue d'ensemble" };
@@ -35,37 +41,40 @@ export default async function DashboardPage() {
         <KpiStrip leads={leads} />
 
         <div className="grid gap-5 xl:grid-cols-3">
-          <Panel className="xl:col-span-2">
-            <PanelHeader>
-              <PanelTitle>Chiffre d&apos;affaires mensuel — 2026</PanelTitle>
-              <p className="text-label text-muted-foreground">Janvier à août, en euros</p>
-            </PanelHeader>
-            <PanelBody className="pr-5">
+          <Card className="xl:col-span-2">
+            <CardHeader className="border-b">
+              <CardTitle>Chiffre d&apos;affaires mensuel — 2026</CardTitle>
+          <CardAction>
+              <p className="text-label text-muted-foreground">Janvier à août, en euros</p></CardAction>
+        </CardHeader>
+            <CardContent className="pr-5">
               <RevenueChart data={MONTHLY_REVENUE} />
-            </PanelBody>
-          </Panel>
+            </CardContent>
+          </Card>
 
-          <Panel>
-            <PanelHeader>
-              <PanelTitle>Pipeline par étape</PanelTitle>
-              <p className="text-label text-muted-foreground">{leads.length} fiches</p>
-            </PanelHeader>
+          <Card>
+            <CardHeader className="border-b">
+              <CardTitle>Pipeline par étape</CardTitle>
+          <CardAction>
+              <p className="text-label text-muted-foreground">{leads.length} fiches</p></CardAction>
+        </CardHeader>
             <PipelineOverview leads={leads} />
-          </Panel>
+          </Card>
         </div>
 
-        <Panel>
-          <PanelHeader>
-            <PanelTitle>Prospects récents</PanelTitle>
+        <Card>
+          <CardHeader className="border-b">
+            <CardTitle>Prospects récents</CardTitle>
+          <CardAction>
             <Button asChild variant="ghost" size="sm">
               <Link href="/leads">
                 Tout voir
                 <ArrowRight className="size-4" aria-hidden />
               </Link>
-            </Button>
-          </PanelHeader>
+            </Button></CardAction>
+        </CardHeader>
           <RecentLeads leads={leads} />
-        </Panel>
+        </Card>
       </div>
     </LeadsProvider>
   );

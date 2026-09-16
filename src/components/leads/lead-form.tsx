@@ -226,7 +226,7 @@ export function LeadForm({
         <Button type="button" variant="secondary" onClick={onCancel} disabled={isSubmitting}>
           Annuler
         </Button>
-        <Button type="submit" variant="primary" disabled={isSubmitting}>
+        <Button type="submit" variant="default" disabled={isSubmitting}>
           {isSubmitting ? (
             <>
               <Loader2 className="size-4 animate-spin" aria-hidden />

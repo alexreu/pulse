@@ -56,7 +56,7 @@ export function AddLeadDialog({ trigger }: AddLeadDialogProps) {
     <Dialog open={open} onOpenChange={change}>
       <DialogTrigger asChild>
         {trigger ?? (
-          <Button variant="primary">
+          <Button variant="default">
             <Plus className="size-4" aria-hidden />
             Ajouter un prospect
           </Button>
