@@ -63,7 +63,7 @@ export function RevenueChart({ data }: { data: MonthlyRevenue[] }) {
               cursor={{ fill: "var(--brand-tint)" }}
               content={<ChartTooltip />}
             />
-            <Bar dataKey="revenue" radius={[6, 6, 0, 0]} maxBarSize={44}>
+            <Bar dataKey="revenue" radius={[6, 6, 0, 0]} maxBarSize={44} isAnimationActive={false}>
               {data.map((entry, index) => (
                 <Cell
                   key={entry.month}

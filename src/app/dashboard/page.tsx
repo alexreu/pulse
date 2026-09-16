@@ -29,8 +29,12 @@ export default async function DashboardPage() {
 
       <KpiStrip leads={leads} />
 
+      {/*
+        Une seule grille porte les quatre cartes : les colonnes se remplissent
+        d'elles-mêmes et aucune ne laisse de vide sous la plus courte.
+      */}
       <div className="grid items-start gap-5 xl:grid-cols-3">
-        <Card className="self-start xl:col-span-2">
+        <Card className="xl:col-span-2">
           <CardHeader className="border-b">
             <CardTitle>Chiffre d&apos;affaires mensuel — 2026</CardTitle>
             <CardAction>
@@ -42,49 +46,47 @@ export default async function DashboardPage() {
           </CardContent>
         </Card>
 
-        <div className="space-y-5">
-          <Card className="py-0">
-            <CardHeader className="border-b pt-5">
-              <CardTitle>Pipeline par étape</CardTitle>
-              <CardAction>
-                <p className="text-label text-muted-foreground">{leads.length} fiches</p>
-              </CardAction>
-            </CardHeader>
-            <CardContent className="px-0 pb-1">
-              <PipelineOverview leads={leads} />
-            </CardContent>
-          </Card>
+        <Card className="py-0">
+          <CardHeader className="border-b pt-5">
+            <CardTitle>Pipeline par étape</CardTitle>
+            <CardAction>
+              <p className="text-label text-muted-foreground">{leads.length} fiches</p>
+            </CardAction>
+          </CardHeader>
+          <CardContent className="px-0 pb-1">
+            <PipelineOverview leads={leads} />
+          </CardContent>
+        </Card>
 
-          <Card className="py-0">
-            <CardHeader className="border-b pt-5">
-              <div className="flex items-center gap-2.5">
-                <IconTile icon={ListChecks} size="sm" />
-                <CardTitle>À faire en premier</CardTitle>
-              </div>
-            </CardHeader>
-            <CardContent className="px-0 pb-4">
-              <PriorityList actions={actions} />
-            </CardContent>
-          </Card>
-        </div>
+        <Card className="py-0 xl:col-span-2">
+          <CardHeader className="border-b pt-5">
+            <CardTitle>Prospects récents</CardTitle>
+            <CardAction>
+              <Button asChild variant="ghost" size="sm">
+                <Link href="/leads">
+                  Tout voir
+                  <ArrowRight aria-hidden />
+                </Link>
+              </Button>
+            </CardAction>
+          </CardHeader>
+          <CardContent className="px-0 pb-2">
+            <RecentLeads leads={leads} />
+          </CardContent>
+        </Card>
+
+        <Card className="py-0">
+          <CardHeader className="border-b pt-5">
+            <div className="flex items-center gap-2.5">
+              <IconTile icon={ListChecks} size="sm" />
+              <CardTitle>À faire en premier</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent className="px-0 pb-4">
+            <PriorityList actions={actions} />
+          </CardContent>
+        </Card>
       </div>
-
-      <Card className="py-0">
-        <CardHeader className="border-b pt-5">
-          <CardTitle>Prospects récents</CardTitle>
-          <CardAction>
-            <Button asChild variant="ghost" size="sm">
-              <Link href="/leads">
-                Tout voir
-                <ArrowRight aria-hidden />
-              </Link>
-            </Button>
-          </CardAction>
-        </CardHeader>
-        <CardContent className="px-0 pb-2">
-          <RecentLeads leads={leads} />
-        </CardContent>
-      </Card>
 
       {insight ? <InsightBand headline={insight.headline} reading={insight.reading} /> : null}
     </div>

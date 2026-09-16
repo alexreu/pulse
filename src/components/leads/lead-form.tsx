@@ -87,10 +87,10 @@ export function LeadForm({
       onSubmit={handleSubmit(onSubmit, focusFirstError)}
       className="flex min-h-0 flex-1 flex-col overflow-y-auto"
     >
-      <div className="space-y-4 px-5 py-5">
+      <div className="space-y-5 px-6 py-6">
         {banner}
 
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid gap-5 sm:grid-cols-2">
           <Field id="firstName" label="Prénom" required error={errors.firstName?.message}>
             <Input
               id="firstName"
@@ -122,7 +122,7 @@ export function LeadForm({
           />
         </Field>
 
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid gap-5 sm:grid-cols-2">
           <Field id="email" label="E-mail" required error={errors.email?.message}>
             <Input
               id="email"
@@ -158,7 +158,7 @@ export function LeadForm({
           </Field>
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid gap-5 sm:grid-cols-2">
           <Field
             id="estimatedValue"
             label="Montant estimé (€)"
