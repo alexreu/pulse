@@ -3,6 +3,7 @@
 import {
   Bar,
   BarChart,
+  Cell,
   CartesianGrid,
   ResponsiveContainer,
   Tooltip,
@@ -62,7 +63,14 @@ export function RevenueChart({ data }: { data: MonthlyRevenue[] }) {
               cursor={{ fill: "var(--brand-tint)" }}
               content={<ChartTooltip />}
             />
-            <Bar dataKey="revenue" fill="var(--brand)" radius={[4, 4, 0, 0]} maxBarSize={48} />
+            <Bar dataKey="revenue" radius={[6, 6, 0, 0]} maxBarSize={44}>
+              {data.map((entry, index) => (
+                <Cell
+                  key={entry.month}
+                  fill={index === data.length - 1 ? "var(--brand)" : "var(--chart-idle)"}
+                />
+              ))}
+            </Bar>
           </BarChart>
         </ResponsiveContainer>
       </div>

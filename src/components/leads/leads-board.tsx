@@ -24,6 +24,7 @@ import { EmptyState } from "@/components/common/empty-state";
 import { AddLeadDialog } from "./add-lead-dialog";
 import { BulkActionsBar } from "./bulk-actions-bar";
 import { LeadsFilters } from "./leads-filters";
+import { LEAD_VIEWS, LeadsTabs, type LeadViewId } from "./leads-tabs";
 import { LeadsTable } from "./leads-table";
 
 function isStatus(value: string): value is LeadStatus {
@@ -48,16 +49,22 @@ export function LeadsBoard() {
     };
   });
 
+  const [view, setView] = React.useState<LeadViewId>("all");
   const [sort, setSort] = React.useState<LeadSort>({ field: "createdAt", direction: "desc" });
   const [selection, setSelection] = React.useState<RowSelectionState>({});
   const [pageSize, setPageSize] = React.useState(10);
   const [pending, setPending] = React.useState(false);
 
-  // Le tri et le filtrage passent par les fonctions du domaine, pas par le tableau.
-  const visible = React.useMemo(
-    () => sortLeads(filterLeads(leads, filters), sort),
-    [leads, filters, sort],
-  );
+  // Le tri et le filtrage passent par les fonctions du domaine, pas par le
+  // tableau. La vue rapide se cumule au filtre d'étape détaillé.
+  const visible = React.useMemo(() => {
+    const viewStatuses = LEAD_VIEWS.find((entry) => entry.id === view)?.statuses ?? [];
+    const scoped =
+      viewStatuses.length === 0
+        ? leads
+        : leads.filter((lead) => (viewStatuses as LeadStatus[]).includes(lead.status));
+    return sortLeads(filterLeads(scoped, filters), sort);
+  }, [leads, filters, sort, view]);
 
   const selectedIds = React.useMemo(
     () => Object.keys(selection).filter((id) => selection[id]),
@@ -74,6 +81,7 @@ export function LeadsBoard() {
 
   function reset() {
     setFilters(EMPTY_FILTERS);
+    setView("all");
   }
 
   async function applyStatus(status: LeadStatus) {
@@ -113,7 +121,10 @@ export function LeadsBoard() {
   const hasLeads = leads.length > 0;
 
   return (
-    <Card>
+    <div className="space-y-4">
+      <LeadsTabs leads={leads} value={view} onChange={setView} />
+
+      <Card className="py-0">
       {selectedIds.length > 0 ? (
         <BulkActionsBar
           count={selectedIds.length}
@@ -171,7 +182,8 @@ export function LeadsBoard() {
             />
           )
         }
-      />
-    </Card>
+        />
+      </Card>
+    </div>
   );
 }

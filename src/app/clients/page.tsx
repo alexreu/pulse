@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/card";
 import { EmptyState } from "@/components/common/empty-state";
 import { ClientsTable } from "@/components/clients/clients-table";
-import { PageHeader } from "@/components/layout/page-header";
+import { PageIntro } from "@/components/layout/page-intro";
 
 export const metadata: Metadata = { title: "Clients" };
 export const dynamic = "force-dynamic";
@@ -24,9 +24,7 @@ export default async function ClientsPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="Clients"
-        description="Les affaires signées, classées par chiffre d'affaires. Un client est un prospect passé à l'étape « Gagné »."
+      <PageIntro description="Les affaires signées, classées par chiffre d'affaires. Un client est un prospect passé à l'étape « Gagné »."
       />
 
       {clients.length === 0 ? (

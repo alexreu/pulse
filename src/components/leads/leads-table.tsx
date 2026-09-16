@@ -22,6 +22,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { LeadAvatar } from "./lead-avatar";
 import { LeadStatusBadge } from "./lead-status-badge";
 import { LeadsPagination } from "./leads-pagination";
 
@@ -118,16 +119,22 @@ export function LeadsTable({
           <SortButton label="Prospect" field="name" sort={sort} onSortChange={onSortChange} />
         ),
         cell: ({ row }) => (
-          <div className="min-w-0">
-            <Link
-              href={`/leads/${row.original.id}`}
-              className="block truncate font-medium text-foreground underline-offset-4 hover:underline"
-            >
-              {formatFullName(row.original.firstName, row.original.lastName)}
-            </Link>
-            <span className="block truncate text-label text-subtle md:hidden">
-              {row.original.company}
-            </span>
+          <div className="flex min-w-0 items-center gap-2.5">
+            <LeadAvatar
+              firstName={row.original.firstName}
+              lastName={row.original.lastName}
+            />
+            <div className="min-w-0">
+              <Link
+                href={`/leads/${row.original.id}`}
+                className="block truncate font-medium text-foreground underline-offset-4 hover:underline"
+              >
+                {formatFullName(row.original.firstName, row.original.lastName)}
+              </Link>
+              <span className="block truncate text-label text-subtle md:hidden">
+                {row.original.company}
+              </span>
+            </div>
           </div>
         ),
       },
@@ -302,7 +309,7 @@ export function LeadsTable({
                     className={cn(
                       "px-2 py-2.5 align-middle sm:px-3",
                       cell.column.id === "select" && "pr-0",
-                      cell.column.id === "name" && "max-w-[9rem] sm:max-w-[14rem]",
+                      cell.column.id === "name" && "max-w-[11rem] sm:max-w-[16rem]",
                       cell.column.id === "company" && "max-w-[12rem]",
                       cell.column.id === "email" && "max-w-[16rem]",
                       cell.column.id === "actions" && "px-1 sm:px-3",

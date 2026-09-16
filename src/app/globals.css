@@ -27,7 +27,7 @@
   /* Encres */
   --ink: oklch(0.215 0.005 95);
   --ink-muted: oklch(0.52 0.006 95);
-  --ink-subtle: oklch(0.585 0.006 95);
+  --ink-subtle: oklch(0.498 0.006 95);
 
   /* Filets */
   --line: oklch(0.912 0.005 95);
@@ -57,6 +57,8 @@
   --success-tint: oklch(0.5 0.14 150 / 0.11);
   --danger: oklch(0.51 0.2 27);
   --danger-tint: oklch(0.51 0.2 27 / 0.11);
+
+  --chart-idle: oklch(0.925 0.005 95);
 
   --scrim: oklch(0.215 0.005 95 / 0.35);
 
@@ -128,8 +130,10 @@
   --warning-tint: oklch(0.79 0.13 70 / 0.17);
   --success: oklch(0.76 0.15 150);
   --success-tint: oklch(0.76 0.15 150 / 0.17);
-  --danger: oklch(0.755 0.16 25);
-  --danger-tint: oklch(0.755 0.16 25 / 0.17);
+  --danger: oklch(0.79 0.15 25);
+  --danger-tint: oklch(0.79 0.15 25 / 0.17);
+
+  --chart-idle: oklch(0.32 0.006 95);
 
   --scrim: oklch(0 0 0 / 0.65);
 
@@ -185,6 +189,7 @@
   --color-sunk: var(--sunk);
   --color-subtle: var(--ink-subtle);
   --color-line-strong: var(--line-strong);
+  --color-chart-idle: var(--chart-idle);
 
   --color-brand: var(--brand);
   --color-brand-hover: var(--brand-hover);

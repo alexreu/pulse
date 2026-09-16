@@ -35,7 +35,6 @@ export const DESTINATION_GROUPS: DestinationGroup[] = [
         label: "Activité",
         icon: Activity,
         hint: "Journal des échanges",
-        counter: "activity",
       },
     ],
   },

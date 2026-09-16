@@ -1,11 +1,11 @@
 "use client";
 
 import * as React from "react";
-import { useRouter } from "next/navigation";
-import { Bell, Search } from "lucide-react";
+import { usePathname } from "next/navigation";
+import { Bell } from "lucide-react";
+import type { Lead } from "@/features/leads/types";
 import { CURRENT_USER } from "@/data/user";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,7 +14,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { AddLeadDialog } from "@/components/leads/add-lead-dialog";
+import { CommandPalette, CommandTrigger } from "./command-palette";
 import { MobileNav } from "./mobile-nav";
+import type { NavCounts } from "./app-sidebar";
+import { getPageTitle } from "./navigation";
 import { ThemeToggle } from "./theme-toggle";
 
 /** Notifications fictives : rien n'est envoyé ni reçu. */
@@ -24,46 +28,34 @@ const NOTIFICATIONS = [
   { id: "n3", title: "Rapport hebdomadaire", body: "Votre synthèse du 7 au 13 septembre est prête.", when: "il y a 5 j" },
 ];
 
-export function AppHeader() {
-  const router = useRouter();
-  const [term, setTerm] = React.useState("");
-
-  function submit(event: React.FormEvent) {
-    event.preventDefault();
-    const query = term.trim();
-    router.push(query ? `/leads?q=${encodeURIComponent(query)}` : "/leads");
-  }
+/**
+ * La barre du haut porte le titre de la page et l'unique action primaire de
+ * l'application. Les pages n'ont donc plus à se disputer ce créneau.
+ */
+export function AppHeader({ leads, counts }: { leads: Lead[]; counts: NavCounts }) {
+  const pathname = usePathname();
+  const [paletteOpen, setPaletteOpen] = React.useState(false);
 
   return (
-    <header className="sticky top-0 z-20 flex h-14 items-center gap-2 border-b border-border bg-surface/85 px-4 backdrop-blur-md sm:px-6">
-      <MobileNav />
+    <header className="sticky top-0 z-20 flex h-16 items-center gap-3 bg-background/80 px-4 backdrop-blur-md sm:px-6">
+      <MobileNav counts={counts} />
 
-      <form role="search" onSubmit={submit} className="relative min-w-0 flex-1 sm:max-w-md">
-        <label htmlFor="global-search" className="sr-only">
-          Rechercher un prospect dans toute la base
-        </label>
-        <Search
-          className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
-          aria-hidden
-        />
-        <Input
-          id="global-search"
-          type="search"
-          value={term}
-          onChange={(event) => setTerm(event.target.value)}
-          placeholder="Rechercher un prospect…"
-          className="pl-8"
-        />
-      </form>
+      <h1 className="truncate text-lead font-semibold tracking-[-0.02em] text-foreground lg:text-panel">
+        {getPageTitle(pathname)}
+      </h1>
 
-      <div className="ml-auto flex items-center gap-1">
+      <div className="ml-auto flex items-center gap-2">
+        <div className="hidden sm:block">
+          <CommandTrigger onOpen={() => setPaletteOpen(true)} />
+        </div>
+
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon" className="relative" aria-label="Notifications (3 non lues)">
-              <Bell className="size-4" aria-hidden />
+              <Bell strokeWidth={1.9} aria-hidden />
               <span
                 aria-hidden
-                className="absolute right-1.5 top-1.5 size-1.5 rounded-full bg-primary ring-2 ring-surface"
+                className="absolute right-1.5 top-1.5 size-1.5 rounded-full bg-brand ring-2 ring-background"
               />
             </Button>
           </DropdownMenuTrigger>
@@ -82,19 +74,18 @@ export function AppHeader() {
 
         <ThemeToggle />
 
-        <span className="ml-1 hidden items-center gap-2 border-l border-border pl-3 sm:flex">
-          <span className="text-right leading-tight">
-            <span className="block text-label font-medium text-foreground">{CURRENT_USER.name}</span>
-            <span className="block text-label text-subtle">{CURRENT_USER.role}</span>
-          </span>
-          <span
-            aria-hidden
-            className="ui-figure flex size-8 items-center justify-center rounded-md border border-border bg-muted text-label"
-          >
-            {CURRENT_USER.initials}
-          </span>
+        <AddLeadDialog />
+
+        <span
+          aria-hidden
+          className="ml-1 hidden size-9 shrink-0 items-center justify-center rounded-full bg-action text-label font-medium text-action-ink sm:flex"
+          title={`${CURRENT_USER.name} — ${CURRENT_USER.role}`}
+        >
+          {CURRENT_USER.initials}
         </span>
       </div>
+
+      <CommandPalette leads={leads} open={paletteOpen} onOpenChange={setPaletteOpen} />
     </header>
   );
 }

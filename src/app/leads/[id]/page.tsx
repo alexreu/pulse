@@ -4,9 +4,7 @@ import {
   RepositoryError,
   getLead,
   listActivitiesForLead,
-  listLeads,
 } from "@/features/leads/api/repository";
-import { LeadsProvider } from "@/features/leads/api/leads-store";
 import { LeadDetail } from "@/components/leads/lead-detail";
 import { formatFullName } from "@/lib/format";
 
@@ -31,7 +29,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
  */
 async function loadLead(id: string) {
   try {
-    return await Promise.all([getLead(id), listActivitiesForLead(id), listLeads()]);
+    return await Promise.all([getLead(id), listActivitiesForLead(id)]);
   } catch (error) {
     if (error instanceof RepositoryError && error.status === 404) return null;
     throw error;
@@ -43,11 +41,9 @@ export default async function LeadDetailPage({ params }: Props) {
   const data = await loadLead(id);
 
   if (!data) notFound();
-  const [lead, activities, leads] = data;
+  const [lead, activities] = data;
 
   return (
-    <LeadsProvider initialLeads={leads}>
       <LeadDetail lead={lead} initialActivities={activities} />
-    </LeadsProvider>
   );
 }

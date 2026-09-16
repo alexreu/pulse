@@ -32,9 +32,14 @@ function CardHeader({ className, ...props }: React.ComponentProps<"div">) {
   )
 }
 
-function CardTitle({ className, ...props }: React.ComponentProps<"div">) {
+/**
+ * Le titre d'une carte est un titre de section : il rend un `h2` et non une
+ * `div`, sans quoi le plan du document est plat et la navigation par titres
+ * disparaît pour les lecteurs d'écran.
+ */
+function CardTitle({ className, ...props }: React.ComponentProps<"h2">) {
   return (
-    <div
+    <h2
       data-slot="card-title"
       className={cn(
         "ui-title group-data-[size=sm]/card:text-body",
