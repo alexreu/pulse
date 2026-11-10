@@ -1,5 +1,11 @@
 # Pulse — CRM & Analytics
 
+[![CI](https://github.com/alexreu/pulse/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/alexreu/pulse/actions/workflows/ci.yml)
+
+**[Voir la démo en ligne →](https://pulse-gilt-chi-55.vercel.app)** — sans inscription. Vos
+modifications restent propres à votre navigateur ; un bouton dans les réglages remet le jeu
+de départ.
+
 > Pulse est une application fictive réalisée à des fins de démonstration.
 > Aucune donnée n'est réelle : prospects, entreprises, montants, notes et
 > activités ont été écrits à la main pour ce projet.
@@ -10,7 +16,7 @@ son activité. C'est une application métier complète — tableau de données,
 formulaires validés, états, graphiques, thème clair et sombre — pas une page
 vitrine qui décrit un produit.
 
-![Vue d'ensemble](docs/screenshots/01-dashboard.png)
+[![Vue d'ensemble](docs/screenshots/01-dashboard.png)](https://pulse-gilt-chi-55.vercel.app)
 
 ---
 
