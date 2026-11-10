@@ -355,3 +355,19 @@
     scroll-behavior: auto !important;
   }
 }
+
+/* Une surface translucide devient opaque quand le système le demande. */
+@media (prefers-reduced-transparency: reduce) {
+  .app-chrome {
+    background-color: var(--background);
+    backdrop-filter: none;
+  }
+}
+
+@media (prefers-contrast: more) {
+  .app-chrome {
+    background-color: var(--background);
+    backdrop-filter: none;
+    box-shadow: inset 0 -1px 0 var(--border);
+  }
+}

@@ -101,6 +101,8 @@ Le cœur de l'application.
 - **Pagination** : 10, 20 ou 50 lignes par page.
 - **Actions groupées** : quand des lignes sont sélectionnées, la barre de
   filtres cède la place à une barre d'actions — changer l'étape, supprimer.
+  Une suppression ne demande pas de confirmation : elle s'annule depuis le
+  toast pendant huit secondes.
 - **Création** : une boîte de dialogue, huit champs, validation Zod, état de
   chargement, bouton désactivé pendant l'envoi, message de succès.
 
@@ -123,8 +125,9 @@ Le journal global, du plus récent au plus ancien, filtrable par type.
 ### Réglages — `/settings`
 
 Profil, préférences (langue, fuseau, thème) et notifications. Un dernier bloc,
-**Démonstration**, arme une erreur serveur sur la prochaine écriture : c'est ce
-qui permet de voir les états d'erreur de l'application sans rien casser.
+**Démonstration**, remet le jeu de données dans son état de départ, et arme une
+erreur serveur sur la prochaine écriture : c'est ce qui permet de voir les états
+d'erreur de l'application sans rien casser.
 
 ---
 
@@ -160,7 +163,9 @@ src/
 │       ├── leads/[id]/notes/   # POST
 │       ├── leads/bulk/         # PATCH (étape groupée, suppression)
 │       ├── activities/         # GET
-│       └── demo/failure/       # interrupteur d'erreur simulée
+│       ├── demo/failure/       # interrupteur d'erreur simulée
+│       └── demo/reset/         # remise à zéro du jeu du visiteur
+├── proxy.ts                    # pose le cookie de session du visiteur
 │
 ├── components/
 │   ├── ui/                     # primitives : bouton, champ, boîte, tableau…
@@ -171,7 +176,7 @@ src/
 │   └── common/                 # états vide, erreur, évolution
 │
 ├── features/leads/
-│   ├── api/                    # dépôt serveur, client HTTP, contexte React
+│   ├── api/                    # dépôt par visiteur, horloge de démo, client HTTP, contexte
 │   ├── schemas/                # règles Zod
 │   ├── types/                  # modèle de domaine
 │   └── utils/                  # logique métier testable
@@ -195,6 +200,9 @@ Ces fonctions sont pures, exportées et testées unitairement :
 | `filterLeads` | recherche, étape, montant, période, cumulés |
 | `sortLeads` | tri non mutant, nom comparé selon les règles françaises |
 | `formatCurrency` / `formatPercent` / `formatDate` | formatage français |
+| `rebaseLeads` / `rebaseRevenue` | recalage du jeu de données sur la date du jour |
+| `createSessionRegistry` | une copie du jeu par visiteur, bornée en mémoire |
+| `projectMomentum` / `rubberband` | physique du tiroir mobile |
 
 ---
 
@@ -224,17 +232,19 @@ L'application démarre sur <http://localhost:3000> et redirige vers
 
 ## Tests
 
-**Unitaires — 56 tests.** Ils portent sur la logique métier et la validation,
+**Unitaires — 80 tests.** Ils portent sur la logique métier et la validation,
 pas sur le rendu : filtrage par étape, recherche accentuée, bornes des tranches
 de montant, cumul des critères, tri par montant et par nom, calcul du pipeline,
 taux de conversion (y compris la base vide, qui rend 0 et non `NaN`), évolution,
-et chaque règle du schéma Zod — dont le rejet d'un e-mail invalide.
+chaque règle du schéma Zod — dont le rejet d'un e-mail invalide —, le recalage
+des dates (aucune date dans le futur, heure murale conservée au changement
+d'heure) et l'isolation des sessions.
 
 ```bash
 npm test
 ```
 
-**Bout en bout — 9 scénarios, joués sur desktop et sur mobile.**
+**Bout en bout — 13 scénarios, joués sur desktop et sur mobile.**
 
 1. La vue d'ensemble s'affiche avec ses quatre indicateurs.
 2. La navigation mène au tableau des prospects.
@@ -245,13 +255,21 @@ npm test
 7. Une note s'ajoute à la fiche.
 8. Des filtres sans résultat affichent leur état vide et se réinitialisent.
 9. Le tiroir mobile s'ouvre, navigue, puis se referme.
+10. Une suppression groupée s'annule depuis le toast.
+11. Ce qu'un visiteur supprime, un autre le voit encore.
+12. La vue d'ensemble est datée du jour.
+13. Le tiroir mobile se referme d'un glissement vers la gauche.
 
 ```bash
 npm run test:e2e
 ```
 
-Playwright construit l'application et démarre son propre serveur : le dépôt
-vivant en mémoire, chaque exécution repart du jeu de données initial.
+Playwright construit l'application et démarre son propre serveur. Chaque test
+ouvre un contexte de navigateur neuf, donc une session neuve : il part du jeu
+de données initial.
+
+La CI GitHub Actions (`.github/workflows/ci.yml`) joue types, lint, tests
+unitaires et build, puis les scénarios Playwright.
 
 ---
 
@@ -262,6 +280,22 @@ dépôt en mémoire (`src/features/leads/api/repository.ts`), exposé par des ro
 handlers Next.js. Les pages serveur lisent le dépôt directement ; les écritures
 passent par HTTP, avec validation Zod côté serveur et codes d'erreur réels
 (400, 404, 422, 500). Le jour où une vraie base arrive, seul le dépôt change.
+
+**Une copie du jeu de données par visiteur.** La démonstration est publique :
+si l'état était partagé, un visiteur qui supprime tout laisserait un CRM vide
+au suivant. `src/proxy.ts` pose un cookie de session, et le dépôt tient une
+copie par cookie — au plus 500 sessions, expirées après six heures
+d'inactivité, 300 fiches et 100 notes par fiche au maximum.
+
+**Un jeu de données qui ne vieillit pas.** Les fiches ont été écrites autour du
+15 septembre 2026. À la création de chaque session, toutes les dates avancent
+du même nombre de jours, à heure murale constante, et la série mensuelle du
+même nombre de mois : un prospect « créé avant-hier » le reste, et la liste
+« À faire en premier » garde son sens quel que soit le jour de la visite.
+
+**Réparer plutôt que confirmer.** Supprimer ne passe pas par une boîte de
+dialogue : le toast propose « Annuler », et le serveur remet les fiches à leur
+place d'origine avec leur historique.
 
 **Composants serveur par défaut.** Seul ce qui a besoin d'interactivité est
 client : le tableau, le formulaire, le graphique, le tiroir, le thème. Les
@@ -336,22 +370,25 @@ thème sombre est le même système sur la rampe sombre, à parité de contraste
 - Un lien d'évitement mène au contenu ; un anneau de focus unique couvre toute
   l'application.
 - Les compteurs de résultats sont annoncés (`aria-live`).
-- `prefers-reduced-motion` neutralise animations et transitions.
+- `prefers-reduced-motion` neutralise animations et transitions ; le tiroir
+  glissable se pose alors sans ressort.
+- `prefers-reduced-transparency` et `prefers-contrast: more` rendent l'entête
+  translucide opaque.
+- Le tiroir mobile se ferme au glissement, mais aussi par son bouton et par
+  Échap : le geste est un raccourci, jamais le seul chemin.
 
 ---
 
 ## Limites assumées
 
-- **Les écritures ne survivent pas au redémarrage.** Le dépôt vit en mémoire ;
-  au redémarrage du serveur, le jeu de données initial revient. Sur un
-  hébergement sans serveur, chaque instance a sa propre copie.
+- **Les écritures ne survivent pas au redémarrage.** Le dépôt vit en mémoire,
+  une copie par visiteur ; au redémarrage du serveur, ou si une autre instance
+  sans serveur reçoit la requête, le jeu de données initial revient.
 - **Pas d'authentification.** L'utilisateur est fictif et considéré connecté.
 - **Les réglages ne sont pas persistés**, à l'exception du thème, que
   next-themes conserve dans le navigateur.
 - **Les notifications, e-mails et rendez-vous sont fictifs.** Rien n'est envoyé,
   aucun agenda n'est lu.
-- **Le jeu de données est daté.** Il est écrit autour du 15 septembre 2026 ;
-  les dates relatives se décalent au fil du temps réel.
 - **Les chiffres du cahier des charges ont été recalculés.** Les indicateurs
   sont calculés à partir des 45 fiches du jeu de données plutôt que codés en
   dur ; les valeurs d'exemple de la spécification supposaient une base plus
@@ -361,7 +398,10 @@ thème sombre est le même système sur la rampe sombre, à parité de contraste
 
 ## Déploiement
 
-Le projet est prêt pour Vercel, sans variable d'environnement.
+Le projet est prêt pour Vercel, sans variable d'environnement obligatoire.
+L'adresse publique des aperçus de partage (image Open Graph générée par
+`src/app/opengraph-image.tsx`) vient de `VERCEL_PROJECT_PRODUCTION_URL`, que
+Vercel fournit ; ailleurs, `SITE_URL` permet de la fixer.
 
 1. Pousser le dépôt sur GitHub.
 2. Sur <https://vercel.com/new>, importer le dépôt. Vercel détecte Next.js et
@@ -374,10 +414,11 @@ En ligne de commande :
 npx vercel --prod
 ```
 
-Compte tenu de la limite ci-dessus sur le dépôt en mémoire, les écritures
-faites en production sont locales à l'instance qui les a reçues et disparaissent
-avec elle. C'est le comportement attendu d'une démonstration sans base de
-données.
+Les écritures faites en production restent propres au visiteur, et locales à
+l'instance qui les a reçues : elles disparaissent avec elle. C'est le
+comportement attendu d'une démonstration sans base de données. Les en-têtes de
+sécurité (`nosniff`, `X-Frame-Options`, HSTS, `Referrer-Policy`,
+`Permissions-Policy`) sont posés dans `next.config.ts`.
 
 ---
 

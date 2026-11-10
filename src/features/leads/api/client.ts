@@ -66,6 +66,21 @@ export function deleteLeads(ids: string[]): Promise<{ removed: string[] }> {
   });
 }
 
+export function restoreDeletedLeads(): Promise<{ leads: Lead[]; restored: number }> {
+  return request("/api/leads/bulk", {
+    method: "PATCH",
+    body: JSON.stringify({ action: "restore" }),
+  });
+}
+
+export function fetchDemoFailure(): Promise<{ failNextWrite: boolean }> {
+  return request("/api/demo/failure");
+}
+
+export function resetDemo(): Promise<{ reset: boolean }> {
+  return request("/api/demo/reset", { method: "POST" });
+}
+
 export function setDemoFailure(enabled: boolean): Promise<{ failNextWrite: boolean }> {
   return request("/api/demo/failure", { method: "PUT", body: JSON.stringify({ enabled }) });
 }

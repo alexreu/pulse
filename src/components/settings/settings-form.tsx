@@ -5,6 +5,7 @@ import { useTheme } from "next-themes";
 import { toast } from "sonner";
 import { CURRENT_USER } from "@/data/user";
 import { setDemoFailure } from "@/features/leads/api/client";
+import { useLeads } from "@/features/leads/api/leads-store";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -23,6 +24,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+
+const LANGUAGE_LABELS: Record<string, string> = { fr: "Français", en: "English" };
+const TIMEZONE_LABELS: Record<string, string> = {
+  "Europe/Paris": "Europe/Paris",
+  "Europe/Lisbon": "Europe/Lisbonne",
+  "America/Montreal": "Amérique/Montréal",
+};
+const THEME_LABELS: Record<string, string> = { light: "Clair", dark: "Sombre", system: "Système" };
 
 const NOTIFICATIONS = [
   {
@@ -67,10 +76,12 @@ function SettingRow({
 
 /**
  * Les réglages sont purement frontend : rien n'est persisté côté serveur,
- * sauf l'interrupteur de démonstration d'erreur, qui pilote le dépôt.
+ * sauf le bloc Démonstration, qui pilote le dépôt du visiteur.
  */
-export function SettingsForm() {
+export function SettingsForm({ initialFailNextWrite = false }: { initialFailNextWrite?: boolean }) {
   const { theme, setTheme } = useTheme();
+  const { resetAll } = useLeads();
+  const [resetting, setResetting] = React.useState(false);
 
   const [profile, setProfile] = React.useState<{
     name: string;
@@ -86,7 +97,7 @@ export function SettingsForm() {
   const [notifications, setNotifications] = React.useState(() =>
     Object.fromEntries(NOTIFICATIONS.map((entry) => [entry.id, entry.initial])),
   );
-  const [failNextWrite, setFailNextWrite] = React.useState(false);
+  const [failNextWrite, setFailNextWrite] = React.useState(initialFailNextWrite);
   const [saving, setSaving] = React.useState(false);
 
   async function saveProfile(event: React.FormEvent) {
@@ -112,6 +123,21 @@ export function SettingsForm() {
     } catch {
       setFailNextWrite(!enabled);
       toast.error("L'interrupteur n'a pas pu être basculé.");
+    }
+  }
+
+  async function resetDemo() {
+    setResetting(true);
+    try {
+      await resetAll();
+      setFailNextWrite(false);
+      toast.success("Démonstration réinitialisée.", {
+        description: "Le jeu de données est revenu à son état de départ.",
+      });
+    } catch {
+      toast.error("La démonstration n'a pas pu être réinitialisée.");
+    } finally {
+      setResetting(false);
     }
   }
 
@@ -177,7 +203,7 @@ export function SettingsForm() {
                 </Label>
                 <Select value={language} onValueChange={setLanguage}>
                   <SelectTrigger id="pref-language">
-                    <SelectValue />
+                    <SelectValue>{LANGUAGE_LABELS[language]}</SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="fr">Français</SelectItem>
@@ -197,7 +223,7 @@ export function SettingsForm() {
                 </Label>
                 <Select value={timezone} onValueChange={setTimezone}>
                   <SelectTrigger id="pref-timezone">
-                    <SelectValue />
+                    <SelectValue>{TIMEZONE_LABELS[timezone]}</SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="Europe/Paris">Europe/Paris</SelectItem>
@@ -218,7 +244,7 @@ export function SettingsForm() {
                 </Label>
                 <Select value={theme ?? "system"} onValueChange={setTheme}>
                   <SelectTrigger id="pref-theme">
-                    <SelectValue />
+                    <SelectValue>{THEME_LABELS[theme ?? "system"]}</SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="light">Clair</SelectItem>
@@ -270,6 +296,15 @@ export function SettingsForm() {
           </p></CardAction>
         </CardHeader>
         <div className="divide-y divide-border">
+          <SettingRow
+            title="Réinitialiser la démonstration"
+            description="Remet les prospects, les notes et l'historique dans leur état de départ. Vos modifications sont propres à votre navigateur : personne d'autre ne les voit."
+            control={
+              <Button variant="secondary" onClick={resetDemo} disabled={resetting}>
+                {resetting ? "Réinitialisation…" : "Réinitialiser"}
+              </Button>
+            }
+          />
           <SettingRow
             title="Simuler une erreur serveur"
             description="La prochaine création, note ou action groupée échouera avec une erreur 500. L'interrupteur se désarme tout seul après le déclenchement."

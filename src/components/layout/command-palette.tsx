@@ -109,7 +109,7 @@ export function CommandTrigger({ onOpen }: { onOpen: () => void }) {
     <button
       type="button"
       onClick={onOpen}
-      className="flex h-9 w-full items-center gap-2 rounded-lg bg-surface px-3 text-body text-subtle shadow-subtle transition-colors duration-200 ease-out-soft hover:text-muted-foreground sm:w-64 dark:shadow-none dark:ring-1 dark:ring-border"
+      className="flex h-9 w-full items-center gap-2 rounded-lg bg-surface px-3 text-body text-subtle shadow-subtle transition-colors duration-200 ease-out-soft hover:text-muted-foreground sm:w-44 xl:w-64 dark:shadow-none dark:ring-1 dark:ring-border"
     >
       <Search className="size-4 shrink-0" strokeWidth={1.9} aria-hidden />
       <span className="truncate">Rechercher…</span>

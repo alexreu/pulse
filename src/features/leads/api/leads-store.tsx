@@ -10,6 +10,8 @@ import {
   patchLeadStatus,
   postLead,
   postNote,
+  resetDemo,
+  restoreDeletedLeads,
 } from "./client";
 
 interface LeadsContextValue {
@@ -19,6 +21,10 @@ interface LeadsContextValue {
   addNote: (id: string, body: string) => Promise<Lead>;
   changeStatusMany: (ids: string[], status: LeadStatus) => Promise<number>;
   removeMany: (ids: string[]) => Promise<number>;
+  /** Annule la dernière suppression groupée. */
+  restoreDeleted: () => Promise<number>;
+  /** Remet tout le jeu de données dans son état initial. */
+  resetAll: () => Promise<void>;
 }
 
 const LeadsContext = React.createContext<LeadsContextValue | null>(null);
@@ -86,6 +92,16 @@ export function LeadsProvider({
         setLeads((current) => current.filter((lead) => !removed.includes(lead.id)));
         router.refresh();
         return removed.length;
+      },
+      async restoreDeleted() {
+        const { leads: next, restored } = await restoreDeletedLeads();
+        setLeads(next);
+        router.refresh();
+        return restored;
+      },
+      async resetAll() {
+        await resetDemo();
+        router.refresh();
       },
     };
   }, [leads, router]);

@@ -37,7 +37,7 @@ function isStatus(value: string): value is LeadStatus {
  * l'emplacement vide ensemble.
  */
 export function LeadsBoard() {
-  const { leads, changeStatusMany, removeMany } = useLeads();
+  const { leads, changeStatusMany, removeMany, restoreDeleted } = useLeads();
   const searchParams = useSearchParams();
 
   const [filters, setFilters] = React.useState<LeadFilters>(() => {
@@ -108,13 +108,33 @@ export function LeadsBoard() {
     try {
       const count = await removeMany(selectedIds);
       setSelection({});
-      toast.success(`${count} prospect${count > 1 ? "s" : ""} supprimé${count > 1 ? "s" : ""}.`);
+      // Pas de boîte de confirmation : on rend l'erreur réparable plutôt que
+      // de faire valider chaque geste. Le toast reste assez longtemps pour
+      // qu'on ait le temps de changer d'avis.
+      toast.success(`${count} prospect${count > 1 ? "s" : ""} supprimé${count > 1 ? "s" : ""}.`, {
+        duration: 8000,
+        action: {
+          label: "Annuler",
+          onClick: () => void undoRemove(),
+        },
+      });
     } catch (error) {
       toast.error("La suppression a échoué.", {
         description: error instanceof Error ? error.message : undefined,
       });
     } finally {
       setPending(false);
+    }
+  }
+
+  async function undoRemove() {
+    try {
+      const count = await restoreDeleted();
+      toast.success(`${count} prospect${count > 1 ? "s" : ""} restauré${count > 1 ? "s" : ""}.`);
+    } catch (error) {
+      toast.error("La suppression n'a pas pu être annulée.", {
+        description: error instanceof Error ? error.message : undefined,
+      });
     }
   }
 

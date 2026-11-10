@@ -43,7 +43,7 @@ export function LeadsPagination({
           onValueChange={(value) => onPageSizeChange(Number(value))}
         >
           <SelectTrigger id="page-size" className="h-8 w-[4.5rem]">
-            <SelectValue />
+            <SelectValue>{pageSize}</SelectValue>
           </SelectTrigger>
           <SelectContent>
             {PAGE_SIZES.map((size) => (

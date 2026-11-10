@@ -16,16 +16,14 @@ import { formatCompactCurrency, formatCurrency } from "@/lib/format";
 function ChartTooltip({
   active,
   payload,
-  label,
 }: {
   active?: boolean;
-  payload?: Array<{ value?: number }>;
-  label?: string;
+  payload?: Array<{ value?: number; payload?: MonthlyRevenue }>;
 }) {
   if (!active || !payload?.length) return null;
   return (
     <div className="rounded-lg border border-border bg-surface px-3 py-2 shadow-overlay">
-      <p className="ui-label">{label} 2026</p>
+      <p className="ui-label first-letter:uppercase">{payload[0]?.payload?.longLabel}</p>
       <p data-slot="figure" className="ui-figure mt-0.5 text-lead text-foreground">
         {formatCurrency(payload[0]?.value ?? 0)}
       </p>
@@ -76,7 +74,7 @@ export function RevenueChart({ data }: { data: MonthlyRevenue[] }) {
       </div>
 
       <table className="sr-only">
-        <caption>Chiffre d&apos;affaires mensuel 2026</caption>
+        <caption>Chiffre d&apos;affaires mensuel</caption>
         <thead>
           <tr>
             <th scope="col">Mois</th>
@@ -86,7 +84,7 @@ export function RevenueChart({ data }: { data: MonthlyRevenue[] }) {
         <tbody>
           {data.map((entry) => (
             <tr key={entry.month}>
-              <th scope="row">{entry.label} 2026</th>
+              <th scope="row">{entry.longLabel}</th>
               <td>{formatCurrency(entry.revenue)}</td>
             </tr>
           ))}

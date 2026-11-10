@@ -166,7 +166,7 @@ export function LeadDetail({ lead: initialLead, initialActivities }: LeadDetailP
             <div className="w-48">
               <Select value={lead.status} onValueChange={applyStatus} disabled={statusPending}>
                 <SelectTrigger id="lead-status" aria-describedby="lead-status-help">
-                  <SelectValue />
+                  <SelectValue>{STATUS_CONFIG[lead.status].label}</SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   {LEAD_STATUSES.map((status) => (

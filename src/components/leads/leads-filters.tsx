@@ -97,7 +97,7 @@ export function LeadsFilters({
           type="search"
           value={term}
           onChange={(event) => setTerm(event.target.value)}
-          placeholder="Rechercher un prospect…"
+          placeholder="Rechercher…"
           className="pl-8"
         />
       </div>
@@ -139,7 +139,10 @@ export function LeadsFilters({
           onValueChange={(value) => onChange({ ...filters, valueBracket: value as ValueBracket })}
         >
           <SelectTrigger id="leads-value">
-            <SelectValue />
+            {/* Le libellé est écrit d'avance : sans lui, le rendu serveur laisse le champ vide jusqu'à l'hydratation. */}
+            <SelectValue>
+              {VALUE_OPTIONS.find((option) => option.value === filters.valueBracket)?.label}
+            </SelectValue>
           </SelectTrigger>
           <SelectContent>
             {VALUE_OPTIONS.map((option) => (

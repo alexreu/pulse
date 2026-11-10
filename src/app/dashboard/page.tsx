@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, ListChecks } from "lucide-react";
-import { MONTHLY_REVENUE } from "@/data/revenue";
-import { listLeads } from "@/features/leads/api/repository";
+import { getDemoCalendar, listLeads } from "@/features/leads/api/repository";
+import { describeRevenueRange, formatAsOf } from "@/features/leads/api/demo-clock";
 import { buildPipelineInsight, getPriorityActions } from "@/features/leads/utils/attention";
 import { KpiStrip } from "@/components/dashboard/kpi-strip";
 import { InsightBand } from "@/components/dashboard/insight-band";
@@ -19,15 +19,17 @@ export const metadata: Metadata = { title: "Vue d'ensemble" };
 export const dynamic = "force-dynamic";
 
 export default async function DashboardPage() {
-  const leads = await listLeads();
+  const [leads, { asOf, revenue }] = await Promise.all([listLeads(), getDemoCalendar()]);
   const insight = buildPipelineInsight(leads);
   const actions = getPriorityActions(leads);
 
   return (
     <div className="space-y-5 pt-1">
-      <PageIntro description="L'état du portefeuille au 15 septembre 2026 : ce qui est encaissé, ce qui est engagé, et ce qui vient d'entrer." />
+      <PageIntro
+        description={`L'état du portefeuille au ${formatAsOf(asOf)} : ce qui est encaissé, ce qui est engagé, et ce qui vient d'entrer.`}
+      />
 
-      <KpiStrip leads={leads} />
+      <KpiStrip leads={leads} revenue={revenue} />
 
       {/*
         Une seule grille porte les quatre cartes : les colonnes se remplissent
@@ -36,13 +38,15 @@ export default async function DashboardPage() {
       <div className="grid items-start gap-5 xl:grid-cols-3">
         <Card className="xl:col-span-2">
           <CardHeader className="border-b">
-            <CardTitle>Chiffre d&apos;affaires mensuel — 2026</CardTitle>
+            <CardTitle>Chiffre d&apos;affaires mensuel</CardTitle>
             <CardAction>
-              <p className="text-label text-muted-foreground">Janvier à août, en euros</p>
+              <p className="text-label text-muted-foreground">
+                {describeRevenueRange(revenue)}, en euros
+              </p>
             </CardAction>
           </CardHeader>
           <CardContent>
-            <RevenueChart data={MONTHLY_REVENUE} />
+            <RevenueChart data={revenue} />
           </CardContent>
         </Card>
 

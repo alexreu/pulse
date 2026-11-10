@@ -66,11 +66,14 @@ export type NoteValues = z.infer<typeof noteSchema>;
 export const bulkActionSchema = z.discriminatedUnion("action", [
   z.object({
     action: z.literal("status"),
-    ids: z.array(z.string()).min(1),
+    ids: z.array(z.string().max(32)).min(1).max(500),
     status: z.enum(LEAD_STATUSES),
   }),
   z.object({
     action: z.literal("delete"),
-    ids: z.array(z.string()).min(1),
+    ids: z.array(z.string().max(32)).min(1).max(500),
+  }),
+  z.object({
+    action: z.literal("restore"),
   }),
 ]);

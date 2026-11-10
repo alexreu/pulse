@@ -39,9 +39,11 @@ interface LeadsTableProps {
 
 /** Ce que chaque colonne pèse : le tableau ne cède pas les mêmes en premier. */
 const COLUMN_VISIBILITY: Record<string, string> = {
-  company: "hidden md:table-cell",
+  company: "hidden xl:table-cell",
   email: "hidden xl:table-cell",
   createdAt: "hidden lg:table-cell",
+  // Sur téléphone, le menu d'actions cède sa place : le nom mène à la fiche, qui porte les mêmes actions.
+  actions: "hidden sm:table-cell",
 };
 
 function SortButton({
@@ -67,7 +69,7 @@ function SortButton({
       onClick={() => onSortChange(field)}
       aria-label={`Trier par ${label.toLowerCase()}, ordre ${nextDirection}`}
       className={cn(
-        "ui-label inline-flex items-center gap-1.5 rounded-sm py-0.5 transition-colors duration-200 ease-out-soft hover:text-foreground",
+        "ui-label inline-flex items-center gap-1.5 whitespace-nowrap rounded-sm py-0.5 transition-colors duration-200 ease-out-soft hover:text-foreground",
         isActive && "font-medium text-foreground",
         align === "right" && "flex-row-reverse",
       )}
@@ -119,10 +121,11 @@ export function LeadsTable({
           <SortButton label="Prospect" field="name" sort={sort} onSortChange={onSortChange} />
         ),
         cell: ({ row }) => (
-          <div className="flex min-w-0 items-center gap-2.5">
+          <div className="flex min-w-0 items-center gap-2.5 max-sm:w-[6.5rem]">
             <LeadAvatar
               firstName={row.original.firstName}
               lastName={row.original.lastName}
+              className="max-sm:hidden"
             />
             <div className="min-w-0">
               <Link
@@ -131,7 +134,7 @@ export function LeadsTable({
               >
                 {formatFullName(row.original.firstName, row.original.lastName)}
               </Link>
-              <span className="block truncate text-label text-subtle md:hidden">
+              <span className="block truncate text-label text-subtle xl:hidden">
                 {row.original.company}
               </span>
             </div>
@@ -262,7 +265,7 @@ export function LeadsTable({
         dézoome la page entière pour faire entrer le tableau.
       */}
       <div className="overflow-x-auto">
-        <table className="w-full border-collapse text-body md:min-w-[44rem]">
+        <table className="w-full border-collapse text-body md:min-w-[40rem]">
           <caption className="sr-only">
             Prospects — {leads.length} lignes, triées par {sort.field}, ordre{" "}
             {sort.direction === "asc" ? "croissant" : "décroissant"}
@@ -311,7 +314,7 @@ export function LeadsTable({
                       cell.column.id === "select" && "pr-0",
                       cell.column.id === "name" && "max-w-[11rem] sm:max-w-[16rem]",
                       cell.column.id === "company" && "max-w-[12rem]",
-                      cell.column.id === "email" && "max-w-[16rem]",
+                      cell.column.id === "email" && "max-w-[15rem]",
                       cell.column.id === "actions" && "px-1 sm:px-3",
                       COLUMN_VISIBILITY[cell.column.id],
                     )}

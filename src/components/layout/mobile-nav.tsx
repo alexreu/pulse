@@ -6,12 +6,32 @@ import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SidebarBrand, SidebarNav, SidebarUser, type NavCounts } from "./app-sidebar";
+import { useSwipeToDismiss } from "./use-swipe-to-dismiss";
 
-/** Le rail passe en tiroir sous 1024 px. Radix gère le focus et l'échappement. */
+/**
+ * Le rail passe en tiroir sous 1024 px. Radix gère le focus et l'échappement ;
+ * le tiroir se referme aussi d'un glissement vers la gauche, comme il est venu.
+ */
 export function MobileNav({ counts }: { counts: NavCounts }) {
   const [open, setOpen] = React.useState(false);
   const pathname = usePathname();
   const [renderedPath, setRenderedPath] = React.useState(pathname);
+  const close = React.useCallback(() => setOpen(false), []);
+  const {
+    contentRef,
+    overlayRef,
+    resetPosition,
+    onPointerDown,
+    onPointerMove,
+    onPointerUp,
+    onPointerCancel,
+    onClickCapture,
+  } = useSwipeToDismiss(close);
+
+  function changeOpen(next: boolean) {
+    if (next) resetPosition();
+    setOpen(next);
+  }
 
   // Une navigation ferme le tiroir. Comparer la route pendant le rendu évite
   // l'effet de synchronisation et le rendu supplémentaire qu'il provoque.
@@ -21,7 +41,7 @@ export function MobileNav({ counts }: { counts: NavCounts }) {
   }
 
   return (
-    <DialogPrimitive.Root open={open} onOpenChange={setOpen}>
+    <DialogPrimitive.Root open={open} onOpenChange={changeOpen}>
       <DialogPrimitive.Trigger asChild>
         <Button variant="ghost" size="icon" className="lg:hidden" aria-label="Ouvrir la navigation">
           <Menu strokeWidth={1.9} aria-hidden />
@@ -29,9 +49,15 @@ export function MobileNav({ counts }: { counts: NavCounts }) {
       </DialogPrimitive.Trigger>
 
       <DialogPrimitive.Portal>
-        <DialogPrimitive.Overlay className="fixed inset-0 z-40 bg-[var(--scrim)] backdrop-blur-[2px] data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 lg:hidden" />
+        <DialogPrimitive.Overlay ref={overlayRef} className="fixed inset-0 z-40 bg-[var(--scrim)] backdrop-blur-[2px] data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 lg:hidden" />
         <DialogPrimitive.Content
-          className="fixed inset-y-0 left-0 z-50 flex w-[280px] max-w-[85vw] flex-col bg-background data-[state=open]:animate-in data-[state=open]:slide-in-from-left data-[state=closed]:animate-out data-[state=closed]:slide-out-to-left lg:hidden"
+          ref={contentRef}
+          onPointerDown={onPointerDown}
+          onPointerMove={onPointerMove}
+          onPointerUp={onPointerUp}
+          onPointerCancel={onPointerCancel}
+          onClickCapture={onClickCapture}
+          className="fixed inset-y-0 left-0 z-50 flex w-[280px] max-w-[85vw] touch-pan-y flex-col bg-background will-change-transform data-[state=open]:animate-in data-[state=open]:slide-in-from-left data-[state=closed]:animate-out data-[state=closed]:slide-out-to-left lg:hidden"
           aria-label="Navigation principale"
         >
           <DialogPrimitive.Title className="sr-only">Navigation principale</DialogPrimitive.Title>

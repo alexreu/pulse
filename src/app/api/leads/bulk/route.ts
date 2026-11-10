@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { RepositoryError, bulkDelete, bulkUpdateStatus } from "@/features/leads/api/repository";
+import { RepositoryError, bulkDelete, bulkUpdateStatus, restoreLastDeleted } from "@/features/leads/api/repository";
 import { bulkActionSchema } from "@/features/leads/schemas/lead";
 
 export async function PATCH(request: Request) {
@@ -16,6 +16,9 @@ export async function PATCH(request: Request) {
   }
 
   try {
+    if (parsed.data.action === "restore") {
+      return NextResponse.json(await restoreLastDeleted());
+    }
     if (parsed.data.action === "delete") {
       const removed = await bulkDelete(parsed.data.ids);
       return NextResponse.json({ removed });

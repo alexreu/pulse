@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getFailNextWrite, setFailNextWrite } from "@/features/leads/api/repository";
 
 export async function GET() {
-  return NextResponse.json({ failNextWrite: getFailNextWrite() });
+  return NextResponse.json({ failNextWrite: await getFailNextWrite() });
 }
 
 export async function PUT(request: Request) {
@@ -10,5 +10,5 @@ export async function PUT(request: Request) {
   if (typeof payload?.enabled !== "boolean") {
     return NextResponse.json({ message: "Valeur attendue : { enabled: boolean }." }, { status: 422 });
   }
-  return NextResponse.json({ failNextWrite: setFailNextWrite(payload.enabled) });
+  return NextResponse.json({ failNextWrite: await setFailNextWrite(payload.enabled) });
 }

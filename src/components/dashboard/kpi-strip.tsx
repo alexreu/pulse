@@ -1,5 +1,5 @@
 import { Euro, Percent, Target, Wallet } from "lucide-react";
-import { MONTHLY_REVENUE, PREVIOUS_PERIOD } from "@/data/revenue";
+import { PREVIOUS_PERIOD, type MonthlyRevenue } from "@/data/revenue";
 import type { Lead } from "@/features/leads/types";
 import {
   calculateConversionRate,
@@ -13,10 +13,10 @@ import { KpiCard } from "./kpi-card";
  * Les quatre chiffres de tête, dans une seule carte découpée par des filets.
  * Tout est calculé : le chiffre d'affaires vient de la série mensuelle, les
  * trois autres du jeu de prospects, et chaque évolution se mesure contre la
- * photographie de fin juillet.
+ * photographie de l'avant-dernier mois clos.
  */
-export function KpiStrip({ leads }: { leads: Lead[] }) {
-  const currentMonth = MONTHLY_REVENUE[MONTHLY_REVENUE.length - 1];
+export function KpiStrip({ leads, revenue }: { leads: Lead[]; revenue: MonthlyRevenue[] }) {
+  const currentMonth = revenue[revenue.length - 1] ?? { revenue: 0, longLabel: "" };
   const pipeline = calculatePipelineValue(leads);
   const conversion = calculateConversionRate(leads);
 
@@ -24,7 +24,7 @@ export function KpiStrip({ leads }: { leads: Lead[] }) {
     {
       label: "Chiffre d'affaires",
       value: formatCurrency(currentMonth.revenue),
-      detail: `Encaissé en ${currentMonth.label.replace(".", "").toLocaleLowerCase("fr-FR")} 2026`,
+      detail: `Encaissé en ${currentMonth.longLabel}`,
       trend: calculateTrend(currentMonth.revenue, PREVIOUS_PERIOD.revenue),
       icon: Euro,
     },

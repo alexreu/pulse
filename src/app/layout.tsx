@@ -28,13 +28,41 @@ const geistMono = Geist_Mono({
   display: "swap",
 });
 
+/**
+ * L'adresse publique, pour que les aperçus partagés pointent vers une URL
+ * absolue. Vercel la fournit ; `SITE_URL` permet de la forcer ailleurs.
+ */
+function siteUrl(): URL {
+  if (process.env.SITE_URL) return new URL(process.env.SITE_URL);
+  if (process.env.VERCEL_PROJECT_PRODUCTION_URL) {
+    return new URL(`https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`);
+  }
+  return new URL(`http://localhost:${process.env.PORT ?? 3000}`);
+}
+
+const DESCRIPTION =
+  "Pulse est une application CRM fictive : prospects, pipeline, chiffre d'affaires et activité d'une petite équipe commerciale.";
+
 export const metadata: Metadata = {
+  metadataBase: siteUrl(),
   title: {
     default: "Pulse — Suivi commercial",
     template: "%s · Pulse",
   },
-  description:
-    "Pulse est une application CRM fictive : prospects, pipeline, chiffre d'affaires et activité d'une petite équipe commerciale.",
+  description: DESCRIPTION,
+  applicationName: "Pulse",
+  openGraph: {
+    type: "website",
+    locale: "fr_FR",
+    siteName: "Pulse",
+    title: "Pulse — Suivi commercial",
+    description: DESCRIPTION,
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Pulse — Suivi commercial",
+    description: DESCRIPTION,
+  },
 };
 
 export const viewport: Viewport = {

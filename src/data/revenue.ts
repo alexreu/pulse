@@ -1,16 +1,25 @@
 /**
- * Chiffre d'affaires reconnu mois par mois, en euros, sur l'exercice en cours.
- * Série fictive, arrêtée à août 2026 : septembre est encore en cours.
+ * Chiffre d'affaires reconnu mois par mois, en euros. Série fictive écrite
+ * pour le jour de référence du jeu (15 septembre 2026), arrêtée au dernier
+ * mois clos. Elle est recalée sur la date du jour à l'affichage : voir
+ * `rebaseRevenue` dans `features/leads/api/demo-clock.ts`.
  */
-export interface MonthlyRevenue {
+export interface SeedMonthlyRevenue {
   /** Clé ISO du mois, utilisée pour trier et pour les tests. */
   month: string;
-  /** Abrégé français affiché sur l'axe. */
+  /** Abrégé français d'origine, remplacé au recalage. */
   label: string;
   revenue: number;
 }
 
-export const MONTHLY_REVENUE: MonthlyRevenue[] = [
+/** Un mois de la série une fois recalé sur la date du jour. */
+export interface MonthlyRevenue extends SeedMonthlyRevenue {
+  /** « octobre 2026 ». */
+  longLabel: string;
+  year: number;
+}
+
+export const MONTHLY_REVENUE: SeedMonthlyRevenue[] = [
   { month: "2026-01", label: "Janv.", revenue: 8200 },
   { month: "2026-02", label: "Févr.", revenue: 9400 },
   { month: "2026-03", label: "Mars", revenue: 8900 },
@@ -22,7 +31,7 @@ export const MONTHLY_REVENUE: MonthlyRevenue[] = [
 ];
 
 /**
- * Photographie de la période précédente (31 juillet 2026). Elle sert de point
+ * Photographie de la période précédente (avant-dernier mois clos). Elle sert de point
  * de comparaison aux évolutions affichées : le jeu de données ne conserve que
  * l'état courant, l'évolution a donc besoin d'un repère écrit.
  */

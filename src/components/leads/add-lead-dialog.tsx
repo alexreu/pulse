@@ -56,9 +56,10 @@ export function AddLeadDialog({ trigger }: AddLeadDialogProps) {
     <Dialog open={open} onOpenChange={change}>
       <DialogTrigger asChild>
         {trigger ?? (
-          <Button variant="default">
+          <Button variant="default" className="max-sm:size-9 max-sm:px-0">
             <Plus className="size-4" aria-hidden />
-            Ajouter un prospect
+            {/* Sur téléphone, l'icône seule laisse la place au titre de la page. */}
+            <span className="max-sm:sr-only">Ajouter un prospect</span>
           </Button>
         )}
       </DialogTrigger>

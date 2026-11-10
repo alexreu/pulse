@@ -25,7 +25,7 @@ import { ThemeToggle } from "./theme-toggle";
 const NOTIFICATIONS = [
   { id: "n1", title: "Nouveau prospect", body: "Nina Gauthier — Gauthier Céramique", when: "il y a 1 j" },
   { id: "n2", title: "Affaire gagnée", body: "Zoé Blanchard — Blanchard Fromages, 2 450 €", when: "il y a 3 j" },
-  { id: "n3", title: "Rapport hebdomadaire", body: "Votre synthèse du 7 au 13 septembre est prête.", when: "il y a 5 j" },
+  { id: "n3", title: "Rapport hebdomadaire", body: "Votre synthèse de la semaine passée est prête.", when: "il y a 5 j" },
 ];
 
 /**
@@ -37,10 +37,10 @@ export function AppHeader({ leads, counts }: { leads: Lead[]; counts: NavCounts 
   const [paletteOpen, setPaletteOpen] = React.useState(false);
 
   return (
-    <header className="sticky top-0 z-20 flex h-16 items-center gap-3 bg-background/80 px-4 backdrop-blur-md sm:px-6">
+    <header className="app-chrome sticky top-0 z-20 flex h-16 items-center gap-3 bg-background/80 px-4 backdrop-blur-md sm:px-6">
       <MobileNav counts={counts} />
 
-      <h1 className="truncate text-lead font-semibold tracking-[-0.02em] text-foreground lg:text-panel">
+      <h1 className="min-w-0 truncate text-lead font-semibold tracking-[-0.02em] text-foreground lg:text-panel">
         {getPageTitle(pathname)}
       </h1>
 
@@ -78,7 +78,7 @@ export function AppHeader({ leads, counts }: { leads: Lead[]; counts: NavCounts 
 
         <span
           aria-hidden
-          className="ml-1 hidden size-9 shrink-0 items-center justify-center rounded-full bg-action text-label font-medium text-action-ink sm:flex"
+          className="ml-1 hidden size-9 shrink-0 items-center justify-center rounded-full bg-action text-label font-medium text-action-ink xl:flex"
           title={`${CURRENT_USER.name} — ${CURRENT_USER.role}`}
         >
           {CURRENT_USER.initials}
