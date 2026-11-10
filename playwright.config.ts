@@ -1,7 +1,13 @@
 import { defineConfig, devices } from "@playwright/test";
 
 const PORT = 3100;
-const BASE_URL = `http://127.0.0.1:${PORT}`;
+/**
+ * `E2E_BASE_URL` vise un serveur déjà lancé, par exemple la topologie
+ * « à la Vercel » de `scripts/split-proxy.mjs`, où l'API et les pages
+ * tournent dans deux processus qui ne partagent pas leur mémoire.
+ */
+const EXTERNAL_URL = process.env.E2E_BASE_URL;
+const BASE_URL = EXTERNAL_URL ?? `http://127.0.0.1:${PORT}`;
 
 export default defineConfig({
   testDir: "./e2e",
@@ -20,13 +26,14 @@ export default defineConfig({
     { name: "desktop", use: { ...devices["Desktop Chrome"] } },
     { name: "mobile", use: { ...devices["Pixel 7"] } },
   ],
-  webServer: {
-    // Le dépôt vit en mémoire : chaque exécution démarre son propre serveur
-    // pour repartir du jeu de données initial. Réutiliser un serveur déjà
-    // lancé ferait hériter les scénarios des écritures de la veille.
-    command: `npm run build && npm run start -- --port ${PORT}`,
-    url: BASE_URL,
-    reuseExistingServer: false,
-    timeout: 240_000,
-  },
+  webServer: EXTERNAL_URL
+    ? undefined
+    : {
+        // L'état vit dans les cookies du navigateur : chaque test, dans un
+        // contexte neuf, repart du jeu de données initial.
+        command: `npm run build && npm run start -- --port ${PORT}`,
+        url: BASE_URL,
+        reuseExistingServer: false,
+        timeout: 240_000,
+      },
 });

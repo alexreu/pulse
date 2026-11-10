@@ -171,7 +171,6 @@ src/
 │       ├── activities/         # GET
 │       ├── demo/failure/       # interrupteur d'erreur simulée
 │       └── demo/reset/         # remise à zéro du jeu du visiteur
-├── proxy.ts                    # pose le cookie de session du visiteur
 │
 ├── components/
 │   ├── ui/                     # primitives : bouton, champ, boîte, tableau…
@@ -182,7 +181,7 @@ src/
 │   └── common/                 # états vide, erreur, évolution
 │
 ├── features/leads/
-│   ├── api/                    # dépôt par visiteur, horloge de démo, client HTTP, contexte
+│   ├── api/                    # dépôt, journal rejouable, horloge de démo, client HTTP
 │   ├── schemas/                # règles Zod
 │   ├── types/                  # modèle de domaine
 │   └── utils/                  # logique métier testable
@@ -207,7 +206,7 @@ Ces fonctions sont pures, exportées et testées unitairement :
 | `sortLeads` | tri non mutant, nom comparé selon les règles françaises |
 | `formatCurrency` / `formatPercent` / `formatDate` | formatage français |
 | `rebaseLeads` / `rebaseRevenue` | recalage du jeu de données sur la date du jour |
-| `createSessionRegistry` | une copie du jeu par visiteur, bornée en mémoire |
+| `replay` / `encodeJournal` | rejoue les modifications d'un visiteur, sérialise son journal |
 | `projectMomentum` / `rubberband` | physique du tiroir mobile |
 
 ---
@@ -244,13 +243,14 @@ de montant, cumul des critères, tri par montant et par nom, calcul du pipeline,
 taux de conversion (y compris la base vide, qui rend 0 et non `NaN`), évolution,
 chaque règle du schéma Zod — dont le rejet d'un e-mail invalide —, le recalage
 des dates (aucune date dans le futur, heure murale conservée au changement
-d'heure) et l'isolation des sessions.
+d'heure) et le journal des modifications (rejeu déterministe, annulation,
+cookie altéré ignoré, taille bornée).
 
 ```bash
 npm test
 ```
 
-**Bout en bout — 13 scénarios, joués sur desktop et sur mobile.**
+**Bout en bout — 14 scénarios, joués sur desktop et sur mobile.**
 
 1. La vue d'ensemble s'affiche avec ses quatre indicateurs.
 2. La navigation mène au tableau des prospects.
@@ -265,43 +265,60 @@ npm test
 11. Ce qu'un visiteur supprime, un autre le voit encore.
 12. La vue d'ensemble est datée du jour.
 13. Le tiroir mobile se referme d'un glissement vers la gauche.
+14. Un prospect créé survit au rechargement de la page et sa fiche s'ouvre.
 
 ```bash
 npm run test:e2e
 ```
 
 Playwright construit l'application et démarre son propre serveur. Chaque test
-ouvre un contexte de navigateur neuf, donc une session neuve : il part du jeu
-de données initial.
+ouvre un contexte de navigateur neuf, donc sans cookie : il part du jeu de
+données initial.
 
 La CI GitHub Actions (`.github/workflows/ci.yml`) joue types, lint, tests
-unitaires et build, puis les scénarios Playwright.
+unitaires et build, puis les scénarios Playwright deux fois : sur un serveur
+unique, et dans une topologie qui reproduit Vercel, où les routes API et les
+pages tournent dans deux processus sans mémoire partagée
+(`scripts/split-proxy.mjs`). Pour la rejouer en local :
+
+```bash
+npm run build
+npx next start -p 3201 & npx next start -p 3202 & node scripts/split-proxy.mjs &
+E2E_BASE_URL=http://127.0.0.1:3200 npm run test:e2e
+```
 
 ---
 
 ## Décisions techniques
 
-**Pas de vrai backend, mais une vraie couche API.** Les données vivent dans un
-dépôt en mémoire (`src/features/leads/api/repository.ts`), exposé par des route
+**Pas de vrai backend, mais une vraie couche API.** Les données passent par un
+dépôt (`src/features/leads/api/repository.ts`), exposé par des route
 handlers Next.js. Les pages serveur lisent le dépôt directement ; les écritures
 passent par HTTP, avec validation Zod côté serveur et codes d'erreur réels
 (400, 404, 422, 500). Le jour où une vraie base arrive, seul le dépôt change.
 
-**Une copie du jeu de données par visiteur.** La démonstration est publique :
-si l'état était partagé, un visiteur qui supprime tout laisserait un CRM vide
-au suivant. `src/proxy.ts` pose un cookie de session, et le dépôt tient une
-copie par cookie — au plus 500 sessions, expirées après six heures
-d'inactivité, 300 fiches et 100 notes par fiche au maximum.
+**L'état du visiteur voyage avec lui, pas dans la mémoire du serveur.** Sur
+Vercel, la route qui écrit et la page qui relit tournent dans des fonctions
+distinctes : un état gardé en mémoire y disparaît entre les deux — une fiche
+créée s'effaçait au rafraîchissement suivant. Chaque visiteur porte donc dans
+un cookie compressé le journal de ses modifications (créations, étapes,
+notes, suppressions), et chaque requête le rejoue par-dessus le jeu de départ
+(`src/features/leads/api/journal.ts`). N'importe quelle instance obtient le
+même résultat, sans base de données ni variable d'environnement, et deux
+visiteurs ne se voient jamais : supprimer tout ne laisse pas un CRM vide au
+suivant. Le cookie est revérifié à la lecture et borné à environ 10 Ko ;
+au-delà, l'écriture est refusée avec un message qui propose de réinitialiser.
 
 **Un jeu de données qui ne vieillit pas.** Les fiches ont été écrites autour du
-15 septembre 2026. À la création de chaque session, toutes les dates avancent
+15 septembre 2026. À chaque requête, toutes les dates avancent
 du même nombre de jours, à heure murale constante, et la série mensuelle du
 même nombre de mois : un prospect « créé avant-hier » le reste, et la liste
 « À faire en premier » garde son sens quel que soit le jour de la visite.
 
 **Réparer plutôt que confirmer.** Supprimer ne passe pas par une boîte de
 dialogue : le toast propose « Annuler », et le serveur remet les fiches à leur
-place d'origine avec leur historique.
+place d'origine avec leur historique : il suffit de retirer la suppression du
+journal et de le rejouer.
 
 **Composants serveur par défaut.** Seul ce qui a besoin d'interactivité est
 client : le tableau, le formulaire, le graphique, le tiroir, le thème. Les
@@ -387,9 +404,9 @@ thème sombre est le même système sur la rampe sombre, à parité de contraste
 
 ## Limites assumées
 
-- **Les écritures ne survivent pas au redémarrage.** Le dépôt vit en mémoire,
-  une copie par visiteur ; au redémarrage du serveur, ou si une autre instance
-  sans serveur reçoit la requête, le jeu de données initial revient.
+- **Les modifications vivent dans le navigateur.** Elles suivent le visiteur
+  d'une page à l'autre et d'une visite à l'autre pendant une semaine, mais pas
+  d'un navigateur à l'autre, et le cookie borne leur nombre.
 - **Pas d'authentification.** L'utilisateur est fictif et considéré connecté.
 - **Les réglages ne sont pas persistés**, à l'exception du thème, que
   next-themes conserve dans le navigateur.
@@ -420,9 +437,8 @@ En ligne de commande :
 npx vercel --prod
 ```
 
-Les écritures faites en production restent propres au visiteur, et locales à
-l'instance qui les a reçues : elles disparaissent avec elle. C'est le
-comportement attendu d'une démonstration sans base de données. Les en-têtes de
+Les écritures faites en production restent propres au visiteur, portées par
+ses cookies : elles fonctionnent quelle que soit l'instance qui répond. Les en-têtes de
 sécurité (`nosniff`, `X-Frame-Options`, HSTS, `Referrer-Policy`,
 `Permissions-Policy`) sont posés dans `next.config.ts`.
 

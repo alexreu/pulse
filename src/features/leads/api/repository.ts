@@ -1,87 +1,50 @@
 import "server-only";
 
-import { cookies } from "next/headers";
-import { SEED_LEADS } from "@/data/leads";
+import { cookies, headers } from "next/headers";
 import { MONTHLY_REVENUE, type MonthlyRevenue } from "@/data/revenue";
-import type { Activity, Lead, LeadNote, LeadStatus } from "../types";
-import { sortActivities, createdActivity, noteActivity, seedActivities, statusActivity } from "./activity";
-import { asOfDate, computeDayOffset, latestSeedDate, rebaseLeads, rebaseRevenue } from "./demo-clock";
-import { SESSION_COOKIE, createSessionRegistry, isValidSessionId } from "./session-registry";
+import { SEED_LEADS } from "@/data/leads";
+import type { Activity, Lead, LeadStatus } from "../types";
+import { asOfDate, computeDayOffset, latestSeedDate, rebaseRevenue } from "./demo-clock";
+import {
+  MAX_CHUNKS,
+  countCreated,
+  createdLeadId,
+  decodeJournal,
+  encodeJournal,
+  replay,
+  withoutLastDelete,
+  type JournalOp,
+} from "./journal";
 
 /**
- * Dépôt en mémoire. Il tient lieu de base de données pour cette démonstration.
+ * Le dépôt de la démonstration. Il tient lieu de base de données.
  *
- * Chaque visiteur a sa propre copie du jeu de données, identifiée par un
- * cookie posé dans `src/proxy.ts` : ce qu'un visiteur supprime ou modifie ne
- * touche personne d'autre. Les copies vivent le temps du processus serveur,
- * expirent après quelques heures d'inactivité et repartent du jeu initial,
- * recalé sur la date du jour.
+ * Rien n'est gardé en mémoire sur le serveur : sur Vercel, la route API qui
+ * écrit et la page qui relit tournent dans des fonctions distinctes, qui ne
+ * partagent pas leur mémoire. Chaque visiteur porte donc le journal de ses
+ * modifications dans un cookie (voir `journal.ts`), et chaque lecture le
+ * rejoue par-dessus le jeu de départ, recalé sur la date du jour.
+ *
+ * Conséquences : deux visiteurs ne se voient jamais, et l'état survit aux
+ * redémarrages comme au passage d'une instance à l'autre.
  */
-interface Store {
-  leads: Lead[];
-  activities: Activity[];
-  /** Le jour que représente le jeu recalé. */
-  asOf: string;
-  revenue: MonthlyRevenue[];
-  /** Interrupteur de démonstration : fait échouer la prochaine écriture. */
-  failNextWrite: boolean;
-  sequence: number;
-  /** La dernière suppression groupée, gardée pour pouvoir l'annuler. */
-  lastDeleted: { leads: Array<{ lead: Lead; index: number }>; activities: Activity[] } | null;
-}
 
-/** Garde-fous : la démonstration est publique, sa mémoire doit rester bornée. */
+const JOURNAL_COOKIE = "pulse_journal";
+const FAILURE_COOKIE = "pulse_fail";
+
+/** Garde-fous : la démonstration est publique. */
 const LIMITS = {
-  sessions: 500,
-  idleTimeoutMs: 6 * 60 * 60 * 1000,
-  leadsPerSession: 300,
+  leadsTotal: 300,
   notesPerLead: 100,
 } as const;
 
+/** `Secure` dès que la requête arrive en HTTPS ; le serveur local de test reste en HTTP. */
+async function cookieOptions() {
+  const secure = (await headers()).get("x-forwarded-proto") === "https";
+  return { httpOnly: true, sameSite: "lax" as const, path: "/", maxAge: 60 * 60 * 24 * 7, secure };
+}
+
 const LATEST_SEED_DATE = latestSeedDate(SEED_LEADS);
-
-function createStore(now: Date = new Date()): Store {
-  const days = computeDayOffset(LATEST_SEED_DATE, now);
-  const leads = rebaseLeads(SEED_LEADS, days);
-  const asOf = asOfDate(days);
-  return {
-    leads,
-    activities: seedActivities(leads),
-    asOf,
-    revenue: rebaseRevenue(MONTHLY_REVENUE, asOf),
-    failNextWrite: false,
-    sequence: SEED_LEADS.length,
-    lastDeleted: null,
-  };
-}
-
-const GLOBAL_KEY = Symbol.for("pulse.sessions");
-
-type Registry = ReturnType<typeof createSessionRegistry<Store>>;
-
-function getRegistry(): Registry {
-  const globalScope = globalThis as unknown as Record<symbol, Registry | undefined>;
-  globalScope[GLOBAL_KEY] ??= createSessionRegistry(() => createStore(), {
-    maxSessions: LIMITS.sessions,
-    idleTimeoutMs: LIMITS.idleTimeoutMs,
-  });
-  return globalScope[GLOBAL_KEY]!;
-}
-
-async function getSessionId(): Promise<string | null> {
-  const value = (await cookies()).get(SESSION_COOKIE)?.value;
-  return isValidSessionId(value) ? value : null;
-}
-
-/**
- * Le dépôt du visiteur courant. Une requête sans cookie valide (un appel
- * direct à l'API, par exemple) reçoit une copie jetable : elle lit le jeu
- * initial et ses écritures ne survivent pas à la requête.
- */
-async function getStore(): Promise<Store> {
-  const sessionId = await getSessionId();
-  return sessionId ? getRegistry().get(sessionId) : createStore();
-}
 
 export class RepositoryError extends Error {
   constructor(
@@ -98,33 +61,85 @@ function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-function consumeFailure(store: Store): void {
-  if (!store.failNextWrite) return;
-  store.failNextWrite = false;
+function chunkName(index: number): string {
+  return `${JOURNAL_COOKIE}.${index}`;
+}
+
+async function readJournal(): Promise<JournalOp[]> {
+  const jar = await cookies();
+  return decodeJournal(Array.from({ length: MAX_CHUNKS }, (_, index) => jar.get(chunkName(index))?.value));
+}
+
+async function readState() {
+  const ops = await readJournal();
+  return { ops, ...replay(ops) };
+}
+
+/** Écrit le journal. Ne s'appelle que depuis une route API, seul endroit où un cookie peut être posé. */
+async function writeJournal(ops: JournalOp[]): Promise<void> {
+  const chunks = encodeJournal(ops);
+  if (!chunks) {
+    throw new RepositoryError(
+      "La démonstration a atteint le nombre de modifications qu'elle peut garder. Réinitialisez-la depuis les réglages.",
+      413,
+    );
+  }
+  const jar = await cookies();
+  const options = await cookieOptions();
+  for (let index = 0; index < MAX_CHUNKS; index += 1) {
+    const chunk = chunks[index];
+    if (chunk) jar.set(chunkName(index), chunk, options);
+    else if (jar.has(chunkName(index))) jar.delete(chunkName(index));
+  }
+}
+
+/** L'interrupteur de démonstration : la prochaine écriture échoue, une seule fois. */
+async function consumeFailure(): Promise<void> {
+  const jar = await cookies();
+  if (jar.get(FAILURE_COOKIE)?.value !== "1") return;
+  jar.delete(FAILURE_COOKIE);
   throw new RepositoryError("La démonstration d'erreur serveur a été déclenchée.", 500);
 }
 
+function notFound(id: string): RepositoryError {
+  return new RepositoryError(`Aucun prospect ne porte l'identifiant ${id}.`, 404);
+}
+
+/* — Lectures ——————————————————————————————————————————————————— */
+
 export async function listLeads(): Promise<Lead[]> {
   await delay(180);
-  return structuredClone((await getStore()).leads);
+  return (await readState()).leads;
 }
 
 export async function getLead(id: string): Promise<Lead> {
   await delay(140);
-  const lead = (await getStore()).leads.find((entry) => entry.id === id);
-  if (!lead) throw new RepositoryError(`Aucun prospect ne porte l'identifiant ${id}.`, 404);
-  return structuredClone(lead);
+  const lead = (await readState()).leads.find((entry) => entry.id === id);
+  if (!lead) throw notFound(id);
+  return lead;
 }
 
 export async function listActivities(): Promise<Activity[]> {
   await delay(160);
-  return structuredClone(sortActivities((await getStore()).activities));
+  return (await readState()).activities;
 }
 
 export async function listActivitiesForLead(leadId: string): Promise<Activity[]> {
   const activities = await listActivities();
   return activities.filter((activity) => activity.leadId === leadId);
 }
+
+/** Le jour que représente le jeu et la série mensuelle qui va avec. */
+export async function getDemoCalendar(): Promise<{ asOf: string; revenue: MonthlyRevenue[] }> {
+  const asOf = asOfDate(computeDayOffset(LATEST_SEED_DATE, new Date()));
+  return { asOf, revenue: rebaseRevenue(MONTHLY_REVENUE, asOf) };
+}
+
+export async function getFailNextWrite(): Promise<boolean> {
+  return (await cookies()).get(FAILURE_COOKIE)?.value === "1";
+}
+
+/* — Écritures (routes API uniquement) ———————————————————————————— */
 
 export interface CreateLeadInput {
   firstName: string;
@@ -139,167 +154,113 @@ export interface CreateLeadInput {
 
 export async function createLead(input: CreateLeadInput): Promise<Lead> {
   await delay(420);
-  const store = await getStore();
-  consumeFailure(store);
-  if (store.leads.length >= LIMITS.leadsPerSession) {
+  await consumeFailure();
+  const { ops, leads } = await readState();
+  if (leads.length >= LIMITS.leadsTotal) {
     throw new RepositoryError(
-      `La démonstration est limitée à ${LIMITS.leadsPerSession} fiches. Réinitialisez-la depuis les réglages.`,
+      `La démonstration est limitée à ${LIMITS.leadsTotal} fiches. Réinitialisez-la depuis les réglages.`,
       409,
     );
   }
-  store.sequence += 1;
-  const id = `LD-${1000 + store.sequence}`;
-  const now = new Date().toISOString();
 
-  const notes: LeadNote[] = input.notes?.trim()
-    ? [{ id: `${id}-N1`, body: input.notes.trim(), createdAt: now, author: "Alex Martin" }]
-    : [];
-
-  const lead: Lead = {
-    id,
-    firstName: input.firstName.trim(),
-    lastName: input.lastName.trim(),
-    company: input.company.trim(),
-    email: input.email.trim().toLowerCase(),
-    phone: input.phone?.trim() || undefined,
-    estimatedValue: input.estimatedValue,
-    status: input.status,
-    createdAt: now,
-    notes,
+  const op: JournalOp = {
+    k: "c",
+    t: Date.now(),
+    f: input.firstName.trim(),
+    l: input.lastName.trim(),
+    co: input.company.trim(),
+    e: input.email.trim().toLowerCase(),
+    v: input.estimatedValue,
+    s: input.status,
   };
+  if (input.phone?.trim()) op.p = input.phone.trim();
+  if (input.notes?.trim()) op.n = input.notes.trim();
 
-  store.leads = [lead, ...store.leads];
-  store.activities.push(createdActivity(lead));
-  for (const note of notes) {
-    store.activities.push(noteActivity(lead, note.id, note.body, note.createdAt));
-  }
+  const next = [...ops, op];
+  await writeJournal(next);
 
-  return structuredClone(lead);
+  const id = createdLeadId(countCreated(ops));
+  const lead = replay(next).leads.find((entry) => entry.id === id);
+  if (!lead) throw new RepositoryError("Le prospect n'a pas pu être enregistré.", 500);
+  return lead;
 }
 
 export async function updateLeadStatus(id: string, status: LeadStatus): Promise<Lead> {
   await delay(320);
-  const store = await getStore();
-  consumeFailure(store);
-  const lead = store.leads.find((entry) => entry.id === id);
-  if (!lead) throw new RepositoryError(`Aucun prospect ne porte l'identifiant ${id}.`, 404);
+  await consumeFailure();
+  const { ops, leads } = await readState();
+  const lead = leads.find((entry) => entry.id === id);
+  if (!lead) throw notFound(id);
+  if (lead.status === status) return lead;
 
-  const previous = lead.status;
-  if (previous === status) return structuredClone(lead);
-
-  const now = new Date().toISOString();
-  lead.status = status;
-  lead.lastContactAt = now;
-  store.activities.push(statusActivity(lead, previous, status, now));
-
-  return structuredClone(lead);
+  const next: JournalOp[] = [...ops, { k: "s", t: Date.now(), ids: [id], s: status }];
+  await writeJournal(next);
+  return replay(next).leads.find((entry) => entry.id === id)!;
 }
 
 export async function addNote(id: string, body: string): Promise<Lead> {
   await delay(280);
-  const store = await getStore();
-  consumeFailure(store);
-  const lead = store.leads.find((entry) => entry.id === id);
-  if (!lead) throw new RepositoryError(`Aucun prospect ne porte l'identifiant ${id}.`, 404);
+  await consumeFailure();
+  const { ops, leads } = await readState();
+  const lead = leads.find((entry) => entry.id === id);
+  if (!lead) throw notFound(id);
   if (lead.notes.length >= LIMITS.notesPerLead) {
     throw new RepositoryError(`Une fiche de démonstration garde au plus ${LIMITS.notesPerLead} notes.`, 409);
   }
 
-  const now = new Date().toISOString();
-  const note: LeadNote = {
-    id: `${id}-N${lead.notes.length + 1}-${Date.now()}`,
-    body: body.trim(),
-    createdAt: now,
-    author: "Alex Martin",
-  };
-
-  lead.notes = [...lead.notes, note];
-  lead.lastContactAt = now;
-  store.activities.push(noteActivity(lead, note.id, note.body, now));
-
-  return structuredClone(lead);
+  const next: JournalOp[] = [...ops, { k: "n", t: Date.now(), id, b: body.trim() }];
+  await writeJournal(next);
+  return replay(next).leads.find((entry) => entry.id === id)!;
 }
 
 export async function bulkUpdateStatus(ids: string[], status: LeadStatus): Promise<Lead[]> {
   await delay(380);
-  const store = await getStore();
-  consumeFailure(store);
-  const now = new Date().toISOString();
-  const touched: Lead[] = [];
+  await consumeFailure();
+  const { ops, leads } = await readState();
+  const touched = leads
+    .filter((lead) => ids.includes(lead.id) && lead.status !== status)
+    .map((lead) => lead.id);
+  if (touched.length === 0) return [];
 
-  for (const lead of store.leads) {
-    if (!ids.includes(lead.id) || lead.status === status) continue;
-    const previous = lead.status;
-    lead.status = status;
-    lead.lastContactAt = now;
-    store.activities.push(statusActivity(lead, previous, status, now));
-    touched.push(lead);
-  }
-
-  return structuredClone(touched);
+  const next: JournalOp[] = [...ops, { k: "s", t: Date.now(), ids: touched, s: status }];
+  await writeJournal(next);
+  return replay(next).leads.filter((lead) => touched.includes(lead.id));
 }
 
 export async function bulkDelete(ids: string[]): Promise<string[]> {
   await delay(380);
-  const store = await getStore();
-  consumeFailure(store);
+  await consumeFailure();
+  const { ops, leads } = await readState();
+  const removed = leads.filter((lead) => ids.includes(lead.id)).map((lead) => lead.id);
+  if (removed.length === 0) return [];
 
-  const wanted = new Set(ids);
-  const removedLeads = store.leads
-    .map((lead, index) => ({ lead, index }))
-    .filter(({ lead }) => wanted.has(lead.id));
-  const removed = new Set(removedLeads.map(({ lead }) => lead.id));
-
-  // On garde ce qui part, à sa place d'origine, pour que « Annuler » remette
-  // le tableau exactement dans l'état où il était.
-  store.lastDeleted = {
-    leads: removedLeads,
-    activities: store.activities.filter((activity) => removed.has(activity.leadId)),
-  };
-  store.leads = store.leads.filter((lead) => !removed.has(lead.id));
-  store.activities = store.activities.filter((activity) => !removed.has(activity.leadId));
-
-  return [...removed];
+  await writeJournal([...ops, { k: "d", t: Date.now(), ids: removed }]);
+  return removed;
 }
 
-/** Annule la dernière suppression groupée et rend la liste complète. */
+/**
+ * Annule la dernière suppression groupée. Le journal la retire, et le rejouer
+ * sans elle remet les fiches à leur place, avec leur historique.
+ */
 export async function restoreLastDeleted(): Promise<{ leads: Lead[]; restored: number }> {
   await delay(240);
-  const store = await getStore();
-  const snapshot = store.lastDeleted;
-  if (!snapshot) throw new RepositoryError("Il n'y a aucune suppression à annuler.", 409);
+  const ops = await readJournal();
+  const undone = withoutLastDelete(ops);
+  if (!undone) throw new RepositoryError("Il n'y a aucune suppression à annuler.", 409);
 
-  const leads = [...store.leads];
-  let restored = 0;
-  for (const { lead, index } of snapshot.leads) {
-    if (leads.some((entry) => entry.id === lead.id)) continue;
-    leads.splice(Math.min(index, leads.length), 0, lead);
-    restored += 1;
-  }
-  store.leads = leads;
-  store.activities = [...store.activities, ...snapshot.activities];
-  store.lastDeleted = null;
-
-  return { leads: structuredClone(store.leads), restored };
+  await writeJournal(undone.ops);
+  return { leads: replay(undone.ops).leads, restored: undone.ids.length };
 }
 
 export async function setFailNextWrite(value: boolean): Promise<boolean> {
-  (await getStore()).failNextWrite = value;
+  const jar = await cookies();
+  if (value) jar.set(FAILURE_COOKIE, "1", await cookieOptions());
+  else jar.delete(FAILURE_COOKIE);
   return value;
 }
 
-export async function getFailNextWrite(): Promise<boolean> {
-  return (await getStore()).failNextWrite;
-}
-
-/** Le jour que représente le jeu du visiteur et la série mensuelle qui va avec. */
-export async function getDemoCalendar(): Promise<{ asOf: string; revenue: MonthlyRevenue[] }> {
-  const store = await getStore();
-  return { asOf: store.asOf, revenue: structuredClone(store.revenue) };
-}
-
-/** Remet le jeu du visiteur courant dans son état initial. */
+/** Remet le jeu du visiteur dans son état de départ. */
 export async function resetStore(): Promise<void> {
-  const sessionId = await getSessionId();
-  if (sessionId) getRegistry().reset(sessionId);
+  await writeJournal([]);
+  (await cookies()).delete(FAILURE_COOKIE);
 }

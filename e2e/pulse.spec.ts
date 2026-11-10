@@ -1,10 +1,9 @@
 import { expect, test, type Page } from "@playwright/test";
 
 /**
- * Le dépôt vit en mémoire, avec une copie par visiteur : chaque test démarre
- * dans un contexte de navigateur neuf, donc avec un cookie neuf et le jeu de
- * données initial. Les scénarios restent tout de même écrits sans supposer
- * l'ordre dans lequel ils s'exécutent.
+ * L'état de chaque visiteur vit dans ses cookies : chaque test démarre dans un
+ * contexte de navigateur neuf, donc avec le jeu de données initial. Les
+ * scénarios restent écrits sans supposer l'ordre dans lequel ils s'exécutent.
  */
 const RUN = `${Date.now().toString(36)}`;
 
@@ -200,6 +199,31 @@ test.describe("Démonstration publique", () => {
 
     await first.close();
     await second.close();
+  });
+
+  test("Scénario 14 — un prospect créé survit au rechargement et s'ouvre", async ({ page }, testInfo) => {
+    const lastName = `Durable-${testInfo.project.name}-${RUN}`;
+    await open(page, "/leads");
+    await page.getByRole("button", { name: "Ajouter un prospect" }).click();
+
+    const dialog = page.getByRole("dialog");
+    await dialog.getByLabel(/^Prénom/).fill("Inès");
+    await dialog.getByLabel(/^Nom/).fill(lastName);
+    await dialog.getByLabel(/^Entreprise/).fill("Atelier Durable");
+    await dialog.getByLabel(/^E-mail/).fill("ines@atelier-durable.fr");
+    await dialog.getByLabel(/Montant estimé/).fill("2400");
+    await dialog.getByRole("button", { name: "Créer le prospect" }).click();
+    await expect(page.getByText("Prospect créé.")).toBeVisible();
+    await expect(page.getByText("46 / 46 prospects")).toBeVisible();
+
+    // Un rendu serveur complet, éventuellement par une autre instance.
+    await page.reload();
+    await page.waitForLoadState("networkidle");
+    await expect(page.getByText("46 / 46 prospects")).toBeVisible();
+
+    await page.getByRole("searchbox", { name: /Rechercher un prospect par nom/ }).fill(lastName);
+    await page.getByRole("link", { name: `Inès ${lastName}` }).click();
+    await expect(page.getByRole("heading", { level: 1, name: `Inès ${lastName}` })).toBeVisible();
   });
 
   test("Scénario 12 — la vue d'ensemble est datée du jour", async ({ page }) => {

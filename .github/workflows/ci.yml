@@ -44,3 +44,30 @@ jobs:
           name: playwright-report
           path: playwright-report
           retention-days: 7
+
+  e2e-split:
+    name: Scénarios Playwright — API et pages dans deux processus
+    runs-on: ubuntu-latest
+    needs: quality
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run build
+      # Comme sur Vercel : la route qui écrit et la page qui relit ne partagent pas leur mémoire.
+      - run: |
+          npx next start -p 3201 &
+          npx next start -p 3202 &
+          node scripts/split-proxy.mjs &
+          for i in $(seq 1 60); do
+            curl -sf -o /dev/null http://127.0.0.1:3201/api/leads && curl -sf -o /dev/null http://127.0.0.1:3200/leads && exit 0
+            sleep 1
+          done
+          echo "Les serveurs n'ont pas démarré." && exit 1
+      - run: npm run test:e2e
+        env:
+          E2E_BASE_URL: http://127.0.0.1:3200
