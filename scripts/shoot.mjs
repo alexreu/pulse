@@ -8,19 +8,19 @@ const BASE = process.env.PULSE_URL ?? "http://127.0.0.1:3100";
  * `action` permet d'ouvrir une boîte de dialogue avant la prise de vue.
  */
 const SHOTS = [
-  { file: ".impeccable/review/desktop.png", path: "/dashboard", w: 1440, h: 900, full: true },
-  { file: ".impeccable/review/desktop-leads.png", path: "/leads", w: 1440, h: 900 },
-  { file: ".impeccable/review/desktop-dark.png", path: "/dashboard", w: 1440, h: 900, theme: "dark", full: true },
-  { file: ".impeccable/review/desktop-detail.png", path: "/leads/LD-1001", w: 1440, h: 900, full: true },
-  { file: ".impeccable/review/desktop-dialog.png", path: "/leads", w: 1440, h: 900, action: "dialog" },
-  { file: ".impeccable/review/desktop-dropdown.png", path: "/leads", w: 1440, h: 900, action: "stage" },
-  { file: ".impeccable/review/desktop-clients.png", path: "/clients", w: 1440, h: 900 },
-  { file: ".impeccable/review/desktop-activity.png", path: "/activity", w: 1440, h: 900 },
-  { file: ".impeccable/review/desktop-settings.png", path: "/settings", w: 1440, h: 900, full: true },
-  { file: ".impeccable/review/mobile.png", path: "/dashboard", phone: true, full: true },
-  { file: ".impeccable/review/mobile-leads.png", path: "/leads", phone: true },
-  { file: ".impeccable/review/mobile-nav.png", path: "/dashboard", phone: true, action: "nav" },
-  { file: ".impeccable/review/mobile-dark.png", path: "/leads", phone: true, theme: "dark" },
+  { file: "screenshots/review/desktop.png", path: "/dashboard", w: 1440, h: 900, full: true },
+  { file: "screenshots/review/desktop-leads.png", path: "/leads", w: 1440, h: 900 },
+  { file: "screenshots/review/desktop-dark.png", path: "/dashboard", w: 1440, h: 900, theme: "dark", full: true },
+  { file: "screenshots/review/desktop-detail.png", path: "/leads/LD-1001", w: 1440, h: 900, full: true },
+  { file: "screenshots/review/desktop-dialog.png", path: "/leads", w: 1440, h: 900, action: "dialog" },
+  { file: "screenshots/review/desktop-dropdown.png", path: "/leads", w: 1440, h: 900, action: "stage" },
+  { file: "screenshots/review/desktop-clients.png", path: "/clients", w: 1440, h: 900 },
+  { file: "screenshots/review/desktop-activity.png", path: "/activity", w: 1440, h: 900 },
+  { file: "screenshots/review/desktop-settings.png", path: "/settings", w: 1440, h: 900, full: true },
+  { file: "screenshots/review/mobile.png", path: "/dashboard", phone: true, full: true },
+  { file: "screenshots/review/mobile-leads.png", path: "/leads", phone: true },
+  { file: "screenshots/review/mobile-nav.png", path: "/dashboard", phone: true, action: "nav" },
+  { file: "screenshots/review/mobile-dark.png", path: "/leads", phone: true, theme: "dark" },
 
   { file: "docs/screenshots/01-dashboard.png", path: "/dashboard", w: 1440, h: 980, full: true },
   { file: "docs/screenshots/02-leads.png", path: "/leads", w: 1440, h: 980 },
@@ -30,7 +30,7 @@ const SHOTS = [
   { file: "docs/screenshots/06-mobile.png", path: "/leads", phone: true, full: true },
 ];
 
-await mkdir(".impeccable/review", { recursive: true });
+await mkdir("screenshots/review", { recursive: true });
 await mkdir("docs/screenshots", { recursive: true });
 
 const browser = await chromium.launch();

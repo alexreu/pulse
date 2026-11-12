@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { z } from "zod";
 import { RepositoryError, createLead, listLeads } from "@/features/leads/api/repository";
 import { leadFormSchema } from "@/features/leads/schemas/lead";
 
@@ -18,7 +19,7 @@ export async function POST(request: Request) {
   const parsed = leadFormSchema.safeParse(payload);
   if (!parsed.success) {
     return NextResponse.json(
-      { message: "Les données envoyées sont invalides.", issues: parsed.error.flatten().fieldErrors },
+      { message: "Les données envoyées sont invalides.", issues: z.flattenError(parsed.error).fieldErrors },
       { status: 422 },
     );
   }

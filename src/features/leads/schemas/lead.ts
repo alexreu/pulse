@@ -33,12 +33,10 @@ export const leadFormSchema = z.object({
     .optional()
     .or(z.literal("")),
   estimatedValue: z
-    .number({ invalid_type_error: "Saisissez un montant en euros." })
+    .number({ error: "Saisissez un montant en euros." })
     .positive("Le montant estimé doit être supérieur à 0 €.")
     .max(1_000_000, "Le montant estimé ne peut pas dépasser 1 000 000 €."),
-  status: z.enum(LEAD_STATUSES, {
-    errorMap: () => ({ message: "Choisissez une étape du pipeline." }),
-  }),
+  status: z.enum(LEAD_STATUSES, { error: "Choisissez une étape du pipeline." }),
   notes: z
     .string()
     .trim()

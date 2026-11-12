@@ -46,9 +46,12 @@ next-env.d.ts
 /blob-report
 /playwright/.cache
 
-# artefacts de travail du skill impeccable (les briefs restent versionnés)
-/.impeccable/review
-/.impeccable/refs
-/.impeccable/*.json
-/.impeccable/brief-body.md
-/.impeccable/questions
+# outillage local d'assistance (agents, briefs de design) — hors dépôt
+/AGENTS.md
+/CLAUDE.md
+/PRODUCT.md
+/DESIGN.md
+/.impeccable/
+
+# captures de revue (scripts/shoot.mjs)
+/screenshots/

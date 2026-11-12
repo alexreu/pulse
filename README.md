@@ -221,7 +221,7 @@ npm run dev
 ```
 
 L'application démarre sur <http://localhost:3000> et redirige vers
-`/dashboard`. Node.js 20 ou plus récent.
+`/dashboard`. Node.js 24, la version jouée par la CI (`.nvmrc`).
 
 | Script | Effet |
 | --- | --- |
@@ -237,7 +237,7 @@ L'application démarre sur <http://localhost:3000> et redirige vers
 
 ## Tests
 
-**Unitaires — 80 tests.** Ils portent sur la logique métier et la validation,
+**Unitaires — 87 tests.** Ils portent sur la logique métier et la validation,
 pas sur le rendu : filtrage par étape, recherche accentuée, bornes des tranches
 de montant, cumul des critères, tri par montant et par nom, calcul du pipeline,
 taux de conversion (y compris la base vide, qui rend 0 et non `NaN`), évolution,
@@ -356,27 +356,34 @@ complète à chaque frappe en méritent un. Le reste n'en a pas.
 
 ## Design system
 
-L'identité visuelle est reprise de **Nexa**, un autre projet de l'auteur, et
-adaptée d'une densité marketing à une densité produit.
+Un tableau de bord calme sur un sol chaud : cartes blanches sans filet, lime
+pour l'état actif, noir pour l'action. Les jetons vivent dans
+`src/app/globals.css`.
 
-- **Couleur** en OKLCH sur un axe neutre froid (teinte 278) : `canvas`,
-  `canvas-sunk`, `surface`, `ink` / `ink-muted` / `ink-subtle`, `line` /
-  `line-strong`. Le violet de marque ne sert qu'à trois choses : l'action
-  principale, la destination courante, l'état actif.
+- **Couleur** en OKLCH sur un axe neutre chaud (teinte 95) : `canvas`, `sunk`,
+  `surface`, `ink` / `ink-muted` / `ink-subtle`, `line` / `line-strong`.
+- **Un seul accent, le lime**, réservé à l'état actif : destination courante,
+  barre du mois en cours, sélection. C'est une couleur de fond, jamais de
+  texte — sur blanc, il plafonne à environ 1,6:1.
+- **Le noir porte l'action** : bouton principal et tuiles d'icône. En thème
+  sombre, il s'inverse en blanc cassé, puisqu'un noir sur fond sombre ne se
+  voit pas.
 - **Typographie** : Geist pour toute l'interface, Geist Mono pour les
   identifiants et les mesures. Une échelle à pas serré, fixe — aucune taille
   fluide dans une application métier. Chiffres tabulaires partout où une
   colonne se compare.
-- **Rayons et élévation** : les deux rampes de Nexa. Chaque ombre porte un
-  décalage réel et un flou doux ; aucun halo.
-- **Mouvement** : 150 à 200 ms sur `--ease-out-soft`, pour l'état et le retour,
-  jamais pour le décor.
+- **Élévation** : une surface déclare sa profondeur une seule fois — par
+  l'ombre en clair, par le filet en sombre, où une ombre ne se lit pas. Chaque
+  ombre porte un décalage réel et un flou doux ; aucun halo.
+- **Mouvement** : transitions courtes sur `--ease-out-soft`, pour l'état et le
+  retour, jamais pour le décor.
 - **Vocabulaire d'état** : six tons, un par étape du pipeline — neutre,
   information, violet, avertissement, succès, danger. Le mot accompagne
   toujours la couleur.
 
-Aucun composant ne code une couleur en dur : tout passe par un token, et le
-thème sombre est le même système sur la rampe sombre, à parité de contraste.
+Aucun composant ne code une couleur en dur : tout passe par un jeton, exposé
+aussi sous les noms qu'attendent les composants shadcn/ui. Les contrastes sont
+vérifiés dans les deux thèmes par une sonde Playwright (`scripts/contrast.mjs`).
 
 ---
 
