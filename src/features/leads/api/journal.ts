@@ -2,7 +2,15 @@ import { deflateRawSync, inflateRawSync } from "node:zlib";
 import { SEED_LEADS } from "@/data/leads";
 import type { Activity, Lead, LeadNote, LeadStatus } from "../types";
 import { LEAD_STATUSES } from "../types";
-import { createdActivity, noteActivity, seedActivities, sortActivities, statusActivity } from "./activity";
+import {
+  createdActivity,
+  noteActivity,
+  seedActivities,
+  sortActivities,
+  statusActivity,
+  updatedActivity,
+  type EditableField,
+} from "./activity";
 import { computeDayOffset, latestSeedDate, rebaseLeads } from "./demo-clock";
 
 /**
@@ -30,7 +38,8 @@ export type JournalOp =
     }
   | { k: "s"; t: number; ids: string[]; s: LeadStatus }
   | { k: "n"; t: number; id: string; b: string }
-  | { k: "d"; t: number; ids: string[] };
+  | { k: "d"; t: number; ids: string[] }
+  | { k: "u"; t: number; id: string; f: string; l: string; co: string; e: string; p?: string; v: number };
 
 export interface ReplayedState {
   leads: Lead[];
@@ -109,6 +118,24 @@ export function replay(ops: JournalOp[], now: Date = new Date()): ReplayedState 
       continue;
     }
 
+    if (op.k === "u") {
+      const lead = leads.find((entry) => entry.id === op.id);
+      if (!lead) continue;
+      const next = {
+        firstName: op.f,
+        lastName: op.l,
+        company: op.co,
+        email: op.e,
+        phone: op.p,
+        estimatedValue: op.v,
+      } satisfies Pick<Lead, EditableField>;
+      const changed = (Object.keys(next) as EditableField[]).filter((field) => lead[field] !== next[field]);
+      if (changed.length === 0) continue;
+      Object.assign(lead, next);
+      activities.push(updatedActivity(lead, changed, iso(op.t)));
+      continue;
+    }
+
     const removed = new Set(op.ids);
     leads = leads.filter((lead) => !removed.has(lead.id));
     activities = activities.filter((activity) => !removed.has(activity.leadId));
@@ -180,6 +207,16 @@ function isOp(value: unknown): value is JournalOp {
       return typeof op.id === "string" && typeof op.b === "string";
     case "d":
       return isStringArray(op.ids);
+    case "u":
+      return (
+        typeof op.id === "string" &&
+        typeof op.f === "string" &&
+        typeof op.l === "string" &&
+        typeof op.co === "string" &&
+        typeof op.e === "string" &&
+        (op.p === undefined || typeof op.p === "string") &&
+        typeof op.v === "number"
+      );
     default:
       return false;
   }

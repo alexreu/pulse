@@ -101,7 +101,12 @@ Le cœur de l'application.
 - **Recherche** sur le nom, l'entreprise et l'e-mail, sans accent ni casse,
   avec un délai de 250 ms après la frappe.
 - **Filtres** : étape (multi-sélection), tranche de montant, période de
-  création. Un bouton de réinitialisation apparaît dès qu'un filtre est actif.
+  création. Les onglets (Nouveaux, En cours, Gagnés…) ne sont qu'un raccourci
+  vers le filtre d'étape, pas un second filtre. Un bouton de réinitialisation
+  apparaît dès qu'un filtre est actif.
+- **Vue dans l'URL** : recherche, filtres, tri et taille de page s'écrivent
+  dans l'adresse. Une vue filtrée se partage, et « Retour au tableau » depuis
+  une fiche la retrouve telle quelle.
 - **Tri** sur le nom, le montant et la date, avec la direction indiquée par une
   icône et par `aria-sort`.
 - **Pagination** : 10, 20 ou 50 lignes par page.
@@ -110,14 +115,23 @@ Le cœur de l'application.
   Une suppression ne demande pas de confirmation : elle s'annule depuis le
   toast pendant huit secondes.
 - **Création** : une boîte de dialogue, huit champs, validation Zod, état de
-  chargement, bouton désactivé pendant l'envoi, message de succès.
+  chargement, bouton désactivé pendant l'envoi, puis un toast qui ouvre la fiche.
 
 ### Fiche prospect — `/leads/[id]`
 
 Coordonnées, montant estimé, date de création, dernier contact. L'étape se
 change par un sélecteur ; le changement écrit un évènement daté dans
-l'historique. Une zone de notes permet d'ajouter une note, et l'historique
-rassemble créations, changements d'étape, notes, e-mails et rendez-vous.
+l'historique et s'annule depuis le toast — une affaire signée a son propre
+message, avec un lien vers les clients. La fiche se modifie (coordonnées,
+montant) et se supprime, de façon annulable. Sur téléphone, « Appeler » et
+« Écrire » sont en tête de fiche. Une zone de notes permet d'ajouter une note,
+et l'historique rassemble créations, modifications, changements d'étape,
+notes, e-mails et rendez-vous.
+
+### Recherche — `⌘K`
+
+Une palette, ouverte au clavier ou par le champ de l'entête (une loupe sur
+téléphone) : aller à une page, ouvrir la fiche d'un prospect.
 
 ### Clients — `/clients`
 
@@ -158,6 +172,8 @@ src/
 ├── app/
 │   ├── layout.tsx              # coquille : rail, entête, thème, notifications
 │   ├── page.tsx                # redirige vers /dashboard
+│   ├── not-found.tsx           # adresse inconnue, en français
+│   ├── global-error.tsx        # dernier filet si le layout racine échoue
 │   ├── dashboard/              # page + loading + error
 │   ├── leads/
 │   │   ├── page.tsx
@@ -165,7 +181,7 @@ src/
 │   ├── clients/ activity/ settings/
 │   └── api/
 │       ├── leads/              # GET, POST
-│       ├── leads/[id]/         # GET, PATCH (étape)
+│       ├── leads/[id]/         # GET, PATCH (étape), PUT (modification)
 │       ├── leads/[id]/notes/   # POST
 │       ├── leads/bulk/         # PATCH (étape groupée, suppression)
 │       ├── activities/         # GET
@@ -202,7 +218,9 @@ Ces fonctions sont pures, exportées et testées unitairement :
 | `calculateTrend` | évolution d'une période à l'autre |
 | `getLeadsByStatus` / `getClients` | sélection par étape |
 | `countLeadsByStage` | pipeline étape par étape |
-| `filterLeads` | recherche, étape, montant, période, cumulés |
+| `filterLeads` | recherche, étape, montant, période, règle de relance, cumulés |
+| `parseLeadsQuery` / `serializeLeadsQuery` | la vue du tableau, lue et écrite dans l'URL |
+| `getPriorityActions` | « À faire en premier », déduit des dates du portefeuille |
 | `sortLeads` | tri non mutant, nom comparé selon les règles françaises |
 | `formatCurrency` / `formatPercent` / `formatDate` | formatage français |
 | `rebaseLeads` / `rebaseRevenue` | recalage du jeu de données sur la date du jour |
@@ -237,20 +255,23 @@ L'application démarre sur <http://localhost:3000> et redirige vers
 
 ## Tests
 
-**Unitaires — 87 tests.** Ils portent sur la logique métier et la validation,
+**Unitaires — 99 tests.** Ils portent sur la logique métier et la validation,
 pas sur le rendu : filtrage par étape, recherche accentuée, bornes des tranches
 de montant, cumul des critères, tri par montant et par nom, calcul du pipeline,
 taux de conversion (y compris la base vide, qui rend 0 et non `NaN`), évolution,
 chaque règle du schéma Zod — dont le rejet d'un e-mail invalide —, le recalage
 des dates (aucune date dans le futur, heure murale conservée au changement
-d'heure) et le journal des modifications (rejeu déterministe, annulation,
+d'heure), la cohérence du jeu de données (aucune note ni aucun évènement avant
+la création de sa fiche), la lecture et l'écriture de la vue dans l'URL, les
+règles de « À faire en premier » (le lien ouvre exactement les fiches comptées)
+et le journal des modifications (rejeu déterministe, modification, annulation,
 cookie altéré ignoré, taille bornée).
 
 ```bash
 npm test
 ```
 
-**Bout en bout — 14 scénarios, joués sur desktop et sur mobile.**
+**Bout en bout — 19 scénarios, joués sur desktop et sur mobile.**
 
 1. La vue d'ensemble s'affiche avec ses quatre indicateurs.
 2. La navigation mène au tableau des prospects.
@@ -266,6 +287,11 @@ npm test
 12. La vue d'ensemble est datée du jour.
 13. Le tiroir mobile se referme d'un glissement vers la gauche.
 14. Un prospect créé survit au rechargement de la page et sa fiche s'ouvre.
+15. La palette de recherche ouvre une fiche.
+16. Les filtres survivent à l'aller-retour vers une fiche.
+17. « À faire en premier » ouvre exactement les fiches annoncées.
+18. Une fiche se modifie et l'historique le note.
+19. Une adresse inconnue répond en français.
 
 ```bash
 npm run test:e2e
@@ -356,17 +382,20 @@ complète à chaque frappe en méritent un. Le reste n'en a pas.
 
 ## Design system
 
-Un tableau de bord calme sur un sol chaud : cartes blanches sans filet, lime
-pour l'état actif, noir pour l'action. Les jetons vivent dans
-`src/app/globals.css`.
+Graphite et lime : un rail graphite, un canevas gris froid, des cartes
+blanches, et le lime posé sur le graphite, là où il porte la marque. Les
+jetons vivent dans `src/app/globals.css`.
 
-- **Couleur** en OKLCH sur un axe neutre chaud (teinte 95) : `canvas`, `sunk`,
+- **Couleur** en OKLCH sur un axe neutre froid (teinte 255) : `canvas`, `sunk`,
   `surface`, `ink` / `ink-muted` / `ink-subtle`, `line` / `line-strong`.
+- **Le rail** est un bandeau graphite. La classe `.rail` redéfinit les jetons de
+  son périmètre : la navigation garde ses classes et se lit clair sur sombre.
 - **Un seul accent, le lime**, réservé à l'état actif : destination courante,
-  barre du mois en cours, sélection. C'est une couleur de fond, jamais de
-  texte — sur blanc, il plafonne à environ 1,6:1.
-- **Le noir porte l'action** : bouton principal et tuiles d'icône. En thème
-  sombre, il s'inverse en blanc cassé, puisqu'un noir sur fond sombre ne se
+  sélection, anneau de focus sur le rail. C'est une couleur de fond, jamais de
+  texte — sur blanc, il plafonne à environ 1,6:1. Pour la même raison, le mois
+  en cours du graphique est graphite en clair et lime en sombre.
+- **Le graphite porte l'action** : bouton principal et tuiles d'icône. En thème
+  sombre, il s'inverse en blanc froid, puisqu'un graphite sur fond sombre ne se
   voit pas.
 - **Typographie** : Geist pour toute l'interface, Geist Mono pour les
   identifiants et les mesures. Une échelle à pas serré, fixe — aucune taille

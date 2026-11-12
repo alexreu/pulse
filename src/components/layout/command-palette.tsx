@@ -7,6 +7,7 @@ import type { Lead } from "@/features/leads/types";
 import { STATUS_CONFIG } from "@/features/leads/utils/status";
 import { formatCurrency, formatFullName } from "@/lib/format";
 import {
+  Command,
   CommandDialog,
   CommandEmpty,
   CommandGroup,
@@ -56,49 +57,52 @@ export function CommandPalette({
       title="Recherche"
       description="Allez à une page ou ouvrez la fiche d'un prospect."
     >
-      <CommandInput placeholder="Rechercher un prospect ou une page…" />
-      <CommandList>
-        <CommandEmpty>Aucun résultat.</CommandEmpty>
+      {/* CommandDialog ne fournit pas le contexte cmdk : sans <Command>, l'input plante. */}
+      <Command>
+        <CommandInput placeholder="Rechercher un prospect ou une page…" />
+        <CommandList>
+          <CommandEmpty>Aucun résultat.</CommandEmpty>
 
-        <CommandGroup heading="Aller à">
-          {DESTINATIONS.map((destination) => (
-            <CommandItem
-              key={destination.href}
-              value={`${destination.label} ${destination.hint}`}
-              onSelect={() => go(destination.href)}
-            >
-              <destination.icon className="size-4" strokeWidth={1.9} aria-hidden />
-              {destination.label}
-            </CommandItem>
-          ))}
-        </CommandGroup>
-
-        <CommandSeparator />
-
-        <CommandGroup heading="Prospects">
-          {leads.slice(0, 60).map((lead) => {
-            const name = formatFullName(lead.firstName, lead.lastName);
-            return (
+          <CommandGroup heading="Aller à">
+            {DESTINATIONS.map((destination) => (
               <CommandItem
-                key={lead.id}
-                value={`${name} ${lead.company} ${lead.email}`}
-                onSelect={() => go(`/leads/${lead.id}`)}
+                key={destination.href}
+                value={`${destination.label} ${destination.hint}`}
+                onSelect={() => go(destination.href)}
               >
-                <span className="truncate font-medium">{name}</span>
-                <span className="truncate text-muted-foreground">{lead.company}</span>
-                <span className="ml-auto flex shrink-0 items-center gap-2">
-                  <span className="text-label text-subtle">
-                    {STATUS_CONFIG[lead.status].label}
-                  </span>
-                  <span data-slot="figure" className="ui-figure text-label">
-                    {formatCurrency(lead.estimatedValue)}
-                  </span>
-                </span>
+                <destination.icon className="size-4" strokeWidth={1.9} aria-hidden />
+                {destination.label}
               </CommandItem>
-            );
-          })}
-        </CommandGroup>
-      </CommandList>
+            ))}
+          </CommandGroup>
+
+          <CommandSeparator />
+
+          <CommandGroup heading="Prospects">
+            {leads.slice(0, 60).map((lead) => {
+              const name = formatFullName(lead.firstName, lead.lastName);
+              return (
+                <CommandItem
+                  key={lead.id}
+                  value={`${name} ${lead.company} ${lead.email}`}
+                  onSelect={() => go(`/leads/${lead.id}`)}
+                >
+                  <span className="truncate font-medium">{name}</span>
+                  <span className="truncate text-muted-foreground">{lead.company}</span>
+                  <span className="ml-auto flex shrink-0 items-center gap-2">
+                    <span className="text-label text-subtle">
+                      {STATUS_CONFIG[lead.status].label}
+                    </span>
+                    <span data-slot="figure" className="ui-figure text-label">
+                      {formatCurrency(lead.estimatedValue)}
+                    </span>
+                  </span>
+                </CommandItem>
+              );
+            })}
+          </CommandGroup>
+        </CommandList>
+      </Command>
     </CommandDialog>
   );
 }

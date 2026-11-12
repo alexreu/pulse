@@ -1,8 +1,9 @@
 "use client";
 
 import * as React from "react";
-import { CalendarRange, ListFilter, Search, X } from "lucide-react";
+import { BellRing, CalendarRange, ListFilter, Search, X } from "lucide-react";
 import { LEAD_STATUSES, type LeadFilters, type LeadStatus, type ValueBracket } from "@/features/leads/types";
+import { PRIORITY_RULES } from "@/features/leads/utils/attention";
 import { VALUE_BRACKETS } from "@/features/leads/utils/collection";
 import { STATUS_CONFIG } from "@/features/leads/utils/status";
 import { Button } from "@/components/ui/button";
@@ -80,11 +81,35 @@ export function LeadsFilters({
     filters.statuses.length > 0 ||
     filters.valueBracket !== "all" ||
     Boolean(filters.createdFrom) ||
-    Boolean(filters.createdTo);
+    Boolean(filters.createdTo) ||
+    Boolean(filters.priority);
+
+  const priority = filters.priority ? PRIORITY_RULES[filters.priority] : undefined;
 
   return (
     <div className="flex flex-wrap items-center gap-2 border-b border-border p-3">
-      <div className="relative min-w-0 flex-1 sm:max-w-xs">
+      {priority ? (
+        // La règle de « À faire en premier » qui a ouvert ce tableau, retirable d'un geste.
+        <div className="flex w-full items-center gap-2 rounded-lg bg-warning-tint py-1 pl-3 pr-1 text-body">
+          <BellRing className="size-4 shrink-0 text-warning" aria-hidden />
+          <p className="min-w-0 flex-1">
+            <span className="font-medium">{priority.label}</span>
+            <span className="text-foreground/75"> · {priority.detail.toLowerCase()}</span>
+          </p>
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            type="button"
+            aria-label={`Retirer le filtre « ${priority.label} »`}
+            onClick={() => onChange({ ...filters, priority: undefined })}
+          >
+            <X className="size-4" aria-hidden />
+          </Button>
+        </div>
+      ) : null}
+
+      {/* Les largeurs minimales font passer la barre sur trois lignes en mobile au lieu d'écraser les champs. */}
+      <div className="relative min-w-48 flex-1 sm:max-w-xs">
         <label htmlFor="leads-search" className="sr-only">
           Rechercher un prospect par nom, entreprise ou e-mail
         </label>
@@ -130,7 +155,7 @@ export function LeadsFilters({
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <div className="w-full sm:w-48">
+      <div className="min-w-36 flex-1 sm:w-48 sm:flex-none">
         <label htmlFor="leads-value" className="sr-only">
           Filtrer par montant estimé
         </label>

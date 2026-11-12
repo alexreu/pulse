@@ -135,7 +135,10 @@ test.describe("Pulse", () => {
     await select.click();
     await page.getByRole("option", { name: target, exact: true }).click();
 
-    await expect(page.getByText(`Étape mise à jour : ${target}.`)).toBeVisible();
+    // Une affaire signée a son propre message ; les autres étapes, le message ordinaire.
+    await expect(
+      page.getByText(target === "Gagné" ? /^Affaire signée : / : `Étape mise à jour : ${target}.`),
+    ).toBeVisible();
     await expect(select).toHaveText(target);
 
     // Un évènement daté s'est écrit dans l'historique.
@@ -286,5 +289,70 @@ test.describe("Navigation mobile", () => {
 
     await expect(drawer).not.toBeVisible();
     await expect(page).toHaveURL(/\/dashboard$/);
+  });
+});
+
+test.describe("Recherche, filtres et fiche", () => {
+  test("Scénario 15 — la palette de recherche ouvre une fiche", async ({ page }) => {
+    await open(page, "/dashboard");
+    const isMobile = (page.viewportSize()?.width ?? 1280) < 640;
+    await page
+      .getByRole("button", isMobile ? { name: "Rechercher", exact: true } : { name: /Rechercher…/ })
+      .click();
+
+    const palette = page.getByRole("dialog", { name: "Recherche" });
+    await expect(palette).toBeVisible();
+    await palette.getByPlaceholder("Rechercher un prospect ou une page…").fill("Studio Bloom");
+    await palette.getByRole("option", { name: /Emma Laurent/ }).click();
+
+    await expect(page).toHaveURL(/\/leads\/LD-1001$/);
+    await expect(page.getByRole("heading", { level: 1, name: "Emma Laurent" })).toBeVisible();
+  });
+
+  test("Scénario 16 — les filtres survivent à l'aller-retour vers une fiche", async ({ page }) => {
+    await open(page, "/leads");
+    await page.getByRole("tab", { name: /Gagnés/ }).click();
+    await expect(page).toHaveURL(/status=won/);
+
+    await page.getByRole("row").nth(1).getByRole("link").first().click();
+    await expect(page).toHaveURL(/\/leads\/LD-\d+$/);
+
+    await page.getByRole("link", { name: "Retour au tableau" }).click();
+    await expect(page).toHaveURL(/\/leads\?status=won$/);
+    await expect(page.getByRole("tab", { name: /Gagnés/ })).toHaveAttribute("aria-selected", "true");
+  });
+
+  test("Scénario 17 — « À faire en premier » ouvre exactement les fiches annoncées", async ({ page }) => {
+    await open(page, "/dashboard");
+    const action = page.getByRole("link", { name: /\d+ fiches?/ }).filter({ hasText: /Relancer|Prendre|Faire avancer/ }).first();
+    const label = (await action.textContent()) ?? "";
+    const count = Number(label.match(/(\d+) fiches?/)?.[1]);
+    expect(count).toBeGreaterThan(0);
+
+    await action.click();
+    await expect(page).toHaveURL(/priorite=/);
+    await expect(page.getByText(new RegExp(`^${count} / 45 prospects$`))).toBeVisible();
+    await expect(page.getByRole("button", { name: /Retirer le filtre/ })).toBeVisible();
+  });
+
+  test("Scénario 18 — une fiche se modifie et l'historique le note", async ({ page }) => {
+    await open(page, "/leads/LD-1003");
+    await page.getByRole("button", { name: "Modifier" }).click();
+
+    const dialog = page.getByRole("dialog", { name: "Modifier la fiche" });
+    await dialog.getByLabel(/Montant estimé/).fill("7750");
+    await dialog.getByRole("button", { name: "Enregistrer" }).click();
+
+    await expect(page.getByText("Fiche enregistrée.")).toBeVisible();
+    await expect(dialog).not.toBeVisible();
+    await expect(page.getByText(/^7\s?750\s?€$/).first()).toBeVisible();
+    await expect(page.getByText("Fiche modifiée").first()).toBeVisible();
+  });
+
+  test("Scénario 19 — une adresse inconnue répond en français", async ({ page }) => {
+    const response = await page.goto("/cette-page-n-existe-pas");
+    expect(response?.status()).toBe(404);
+    await expect(page.getByText("Cette page n'existe pas.")).toBeVisible();
+    await expect(page.getByRole("link", { name: "Vue d'ensemble" }).last()).toBeVisible();
   });
 });

@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { usePathname } from "next/navigation";
-import { Bell } from "lucide-react";
+import { Bell, Search } from "lucide-react";
 import type { Lead } from "@/features/leads/types";
 import { CURRENT_USER } from "@/data/user";
 import { Button } from "@/components/ui/button";
@@ -34,29 +34,49 @@ const NOTIFICATIONS = [
  */
 export function AppHeader({ leads, counts }: { leads: Lead[]; counts: NavCounts }) {
   const pathname = usePathname();
+  // La fiche prospect porte son propre h1 (le nom) : l'entête n'en est alors qu'un rappel.
+  const PageHeading = pathname.startsWith("/leads/") ? "p" : "h1";
   const [paletteOpen, setPaletteOpen] = React.useState(false);
+  // Ouvrir le menu vaut lecture : la pastille et le compteur disparaissent.
+  const [unread, setUnread] = React.useState(NOTIFICATIONS.length);
 
   return (
     <header className="app-chrome sticky top-0 z-20 flex h-16 items-center gap-3 bg-background/80 px-4 backdrop-blur-md sm:px-6">
       <MobileNav counts={counts} />
 
-      <h1 className="min-w-0 truncate text-lead font-semibold tracking-[-0.02em] text-foreground lg:text-panel">
+      <PageHeading className="min-w-0 truncate text-lead font-semibold tracking-[-0.02em] text-foreground lg:text-panel">
         {getPageTitle(pathname)}
-      </h1>
+      </PageHeading>
 
       <div className="ml-auto flex items-center gap-2">
         <div className="hidden sm:block">
           <CommandTrigger onOpen={() => setPaletteOpen(true)} />
         </div>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="sm:hidden"
+          aria-label="Rechercher"
+          onClick={() => setPaletteOpen(true)}
+        >
+          <Search strokeWidth={1.9} aria-hidden />
+        </Button>
 
-        <DropdownMenu>
+        <DropdownMenu onOpenChange={(open) => open && setUnread(0)}>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="relative" aria-label="Notifications (3 non lues)">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="relative"
+              aria-label={unread > 0 ? `Notifications (${unread} non lues)` : "Notifications"}
+            >
               <Bell strokeWidth={1.9} aria-hidden />
-              <span
-                aria-hidden
-                className="absolute right-1.5 top-1.5 size-1.5 rounded-full bg-brand ring-2 ring-background"
-              />
+              {unread > 0 && (
+                <span
+                  aria-hidden
+                  className="absolute right-1.5 top-1.5 size-1.5 rounded-full bg-brand ring-2 ring-background"
+                />
+              )}
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-80">

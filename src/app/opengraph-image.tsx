@@ -9,10 +9,10 @@ export const contentType = "image/png";
  * les jetons du thème sombre (OKLCH converti en hexadécimal : le moteur de
  * rendu des images ne lit pas l'OKLCH).
  */
-const INK = "#f3f2f0";
-const MUTED = "#a8a6a1";
-const CANVAS = "#131210";
-const CARD = "#1f1e1b";
+const INK = "#f1f4f8";
+const MUTED = "#a3a9b3";
+const CANVAS = "#101215";
+const CARD = "#191c20";
 const BRAND = "#a5e752";
 
 const BARS = [41, 47, 44, 56, 67, 79, 74, 92];
@@ -92,7 +92,7 @@ export default function OpengraphImage() {
                   flex: 1,
                   height: `${height}%`,
                   borderRadius: 8,
-                  background: index === BARS.length - 1 ? BRAND : "#3a3935",
+                  background: index === BARS.length - 1 ? BRAND : "#2f3338",
                 }}
               />
             ))}

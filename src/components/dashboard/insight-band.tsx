@@ -11,7 +11,7 @@ export function InsightBand({ headline, reading }: { headline: string; reading: 
       <IconTile icon={Lightbulb} size="sm" className="bg-info text-white" />
       <p className="max-w-[90ch] text-body text-foreground">
         <strong className="font-medium">{headline}</strong>{" "}
-        <span className="text-muted-foreground">{reading}</span>
+        <span className="text-foreground/75">{reading}</span>
       </p>
     </aside>
   );

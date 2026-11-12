@@ -20,14 +20,16 @@ export function LeadsTabs({
   onChange,
 }: {
   leads: Lead[];
-  value: LeadViewId;
+  /** `null` quand le filtre d'étape ne correspond à aucun onglet. */
+  value: LeadViewId | null;
   onChange: (next: LeadViewId) => void;
 }) {
   return (
     <div
       role="tablist"
       aria-label="Vues du tableau"
-      className="inline-flex w-fit max-w-full flex-wrap items-center gap-1 rounded-lg bg-sunk p-1"
+      // Sur mobile, une seule ligne qui défile plutôt que deux lignes d'onglets.
+      className="flex w-fit max-w-full items-center gap-1 overflow-x-auto rounded-lg bg-sunk p-1 [scrollbar-width:none] max-sm:snap-x"
     >
       {LEAD_VIEWS.map((view) => {
         const count =
@@ -44,7 +46,7 @@ export function LeadsTabs({
             aria-selected={isActive}
             onClick={() => onChange(view.id)}
             className={cn(
-              "inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-body font-medium",
+              "inline-flex shrink-0 snap-start items-center gap-1.5 rounded-md px-2.5 py-1.5 text-body font-medium",
               "transition-colors duration-200 ease-out-soft",
               isActive
                 ? "bg-surface text-foreground shadow-subtle dark:bg-card dark:shadow-none"

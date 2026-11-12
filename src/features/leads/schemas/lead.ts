@@ -47,6 +47,11 @@ export const leadFormSchema = z.object({
 
 export type LeadFormValues = z.infer<typeof leadFormSchema>;
 
+/** La modification : les coordonnées et le montant. L'étape a son propre contrôle, les notes leur fil. */
+export const leadEditSchema = leadFormSchema.omit({ status: true, notes: true });
+
+export type LeadEditValues = z.infer<typeof leadEditSchema>;
+
 export const statusUpdateSchema = z.object({
   status: z.enum(LEAD_STATUSES),
 });

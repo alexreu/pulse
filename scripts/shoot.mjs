@@ -72,7 +72,14 @@ for (const shot of SHOTS) {
       "nextjs-portal{display:none!important}",
   });
   await page.waitForTimeout(300);
-  await page.screenshot({ path: shot.file, fullPage: Boolean(shot.full) });
+  // Une capture pleine page garde la fenêtre à sa hauteur : le rail, fixé,
+  // s'arrêterait au premier écran. On agrandit la fenêtre à la page entière.
+  if (shot.full) {
+    const height = await page.evaluate(() => document.documentElement.scrollHeight);
+    await page.setViewportSize({ width: page.viewportSize().width, height });
+    await page.waitForTimeout(200);
+  }
+  await page.screenshot({ path: shot.file });
 
   if (errors.length) problems.push(`${shot.file} :: ${errors.join(" | ")}`);
   await context.close();

@@ -3,13 +3,14 @@
 import * as React from "react";
 import { useRouter } from "next/navigation";
 import type { Lead, LeadStatus } from "../types";
-import type { LeadFormValues } from "../schemas/lead";
+import type { LeadEditValues, LeadFormValues } from "../schemas/lead";
 import {
   deleteLeads as deleteLeadsRequest,
   patchBulkStatus,
   patchLeadStatus,
   postLead,
   postNote,
+  putLead,
   resetDemo,
   restoreDeletedLeads,
 } from "./client";
@@ -17,6 +18,7 @@ import {
 interface LeadsContextValue {
   leads: Lead[];
   createLead: (values: LeadFormValues) => Promise<Lead>;
+  updateLead: (id: string, values: LeadEditValues) => Promise<Lead>;
   changeStatus: (id: string, status: LeadStatus) => Promise<Lead>;
   addNote: (id: string, body: string) => Promise<Lead>;
   changeStatusMany: (ids: string[], status: LeadStatus) => Promise<number>;
@@ -65,6 +67,12 @@ export function LeadsProvider({
       async createLead(values) {
         const { lead } = await postLead(values);
         setLeads((current) => [lead, ...current]);
+        router.refresh();
+        return lead;
+      },
+      async updateLead(id, values) {
+        const { lead } = await putLead(id, values);
+        replace(lead);
         router.refresh();
         return lead;
       },

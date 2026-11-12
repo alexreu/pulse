@@ -6,8 +6,9 @@
 
 /* ---------------------------------------------------------------------------
    Pulse — système de design
-   Axe neutre chaud en OKLCH (teinte 95), un seul accent saturé (lime) réservé
-   à l'état actif, noir pour l'action primaire et les tuiles d'icône.
+   Axe neutre froid en OKLCH (teinte 255), un seul accent saturé (lime) réservé
+   à l'état actif, graphite pour l'action primaire, le rail et les tuiles
+   d'icône. Le lime vit sur le graphite : c'est là qu'il porte la marque.
    Aucun composant ne code une couleur en dur : tout passe par un jeton.
 
    Règle d'élévation : une surface déclare sa profondeur UNE fois. En clair,
@@ -20,59 +21,70 @@
 
 :root {
   /* Surfaces */
-  --canvas: oklch(0.966 0.004 95);
-  --sunk: oklch(0.941 0.005 95);
+  --canvas: oklch(0.972 0.006 255);
+  --sunk: oklch(0.941 0.008 255);
   --surface: oklch(1 0 0);
 
   /* Encres */
-  --ink: oklch(0.215 0.005 95);
-  --ink-muted: oklch(0.52 0.006 95);
-  --ink-subtle: oklch(0.498 0.006 95);
+  --ink: oklch(0.215 0.008 255);
+  --ink-muted: oklch(0.52 0.01 255);
+  --ink-subtle: oklch(0.498 0.01 255);
 
   /* Filets */
-  --line: oklch(0.912 0.005 95);
-  --line-strong: oklch(0.855 0.006 95);
+  --line: oklch(0.912 0.008 255);
+  --line-strong: oklch(0.855 0.01 255);
 
   /* Marque — fond uniquement */
   --brand: oklch(0.855 0.19 130);
   --brand-hover: oklch(0.815 0.19 130);
-  --brand-ink: oklch(0.215 0.005 95);
+  --brand-ink: oklch(0.215 0.008 255);
   --brand-tint: oklch(0.855 0.19 130 / 0.22);
 
   /* Action primaire */
-  --action: oklch(0.215 0.005 95);
-  --action-hover: oklch(0.3 0.005 95);
+  --action: oklch(0.215 0.008 255);
+  --action-hover: oklch(0.3 0.008 255);
   --action-ink: oklch(0.99 0 0);
 
   /* Vocabulaire d'état — six tons, un par étape du pipeline */
-  --neutral: oklch(0.52 0.006 95);
-  --neutral-tint: oklch(0.52 0.006 95 / 0.1);
+  --neutral: oklch(0.52 0.01 255);
+  --neutral-tint: oklch(0.52 0.01 255 / 0.1);
   --info: oklch(0.52 0.13 245);
   --info-tint: oklch(0.52 0.13 245 / 0.11);
   --purple: oklch(0.5 0.19 300);
   --purple-tint: oklch(0.5 0.19 300 / 0.11);
-  --warning: oklch(0.545 0.14 58);
-  --warning-tint: oklch(0.545 0.14 58 / 0.13);
+  /* 0.52 et non 0.545 : la pastille « Proposition » posée sur le canevas tombait à 4,3:1. */
+  --warning: oklch(0.52 0.14 58);
+  --warning-tint: oklch(0.52 0.14 58 / 0.13);
   --success: oklch(0.5 0.14 150);
   --success-tint: oklch(0.5 0.14 150 / 0.11);
   --danger: oklch(0.51 0.2 27);
   --danger-tint: oklch(0.51 0.2 27 / 0.11);
 
-  --chart-idle: oklch(0.925 0.005 95);
+  --chart-idle: oklch(0.925 0.008 255);
+  /* Le mois en cours : graphite en clair (le lime sur blanc plafonne à 1,6:1). */
+  --chart-active: var(--ink);
 
-  --scrim: oklch(0.215 0.005 95 / 0.35);
+  /* Rail — un graphite plus profond que l'encre, où le lime porte la marque. */
+  --rail: oklch(0.2 0.01 258);
+  --rail-raised: oklch(0.275 0.012 258);
+  --rail-line: oklch(0.31 0.012 258);
+  --rail-ink: oklch(0.965 0.004 255);
+  --rail-ink-muted: oklch(0.76 0.01 255);
+  --rail-ink-subtle: oklch(0.68 0.01 255);
+
+  --scrim: oklch(0.215 0.008 255 / 0.35);
 
   /* Élévation — décalage réel et flou doux, jamais un halo */
-  --elevation-subtle: 0 1px 2px 0 oklch(0.215 0.005 95 / 0.05);
+  --elevation-subtle: 0 1px 2px 0 oklch(0.215 0.008 255 / 0.05);
   --elevation-card:
-    0 1px 2px 0 oklch(0.215 0.005 95 / 0.04),
-    0 8px 24px -8px oklch(0.215 0.005 95 / 0.07);
+    0 1px 2px 0 oklch(0.215 0.008 255 / 0.04),
+    0 8px 24px -8px oklch(0.215 0.008 255 / 0.07);
   --elevation-lifted:
-    0 2px 4px -1px oklch(0.215 0.005 95 / 0.05),
-    0 14px 32px -10px oklch(0.215 0.005 95 / 0.11);
+    0 2px 4px -1px oklch(0.215 0.008 255 / 0.05),
+    0 14px 32px -10px oklch(0.215 0.008 255 / 0.11);
   --elevation-overlay:
-    0 6px 12px -3px oklch(0.215 0.005 95 / 0.08),
-    0 28px 64px -16px oklch(0.215 0.005 95 / 0.2);
+    0 6px 12px -3px oklch(0.215 0.008 255 / 0.08),
+    0 28px 64px -16px oklch(0.215 0.008 255 / 0.2);
 
   /* Contrat shadcn */
   --background: var(--canvas);
@@ -99,29 +111,29 @@
 }
 
 .dark {
-  --canvas: oklch(0.182 0.004 95);
-  --sunk: oklch(0.155 0.004 95);
-  --surface: oklch(0.225 0.005 95);
+  --canvas: oklch(0.182 0.006 255);
+  --sunk: oklch(0.155 0.006 255);
+  --surface: oklch(0.225 0.008 255);
 
-  --ink: oklch(0.962 0.003 95);
-  --ink-muted: oklch(0.725 0.006 95);
-  --ink-subtle: oklch(0.645 0.006 95);
+  --ink: oklch(0.962 0.005 255);
+  --ink-muted: oklch(0.725 0.01 255);
+  --ink-subtle: oklch(0.645 0.01 255);
 
-  --line: oklch(0.305 0.006 95);
-  --line-strong: oklch(0.375 0.007 95);
+  --line: oklch(0.305 0.01 255);
+  --line-strong: oklch(0.375 0.011 255);
 
   --brand: oklch(0.855 0.19 130);
   --brand-hover: oklch(0.885 0.18 130);
-  --brand-ink: oklch(0.182 0.004 95);
+  --brand-ink: oklch(0.182 0.006 255);
   --brand-tint: oklch(0.855 0.19 130 / 0.2);
 
   /* L'action primaire s'inverse : un noir sur fond sombre ne se voit pas. */
-  --action: oklch(0.962 0.003 95);
-  --action-hover: oklch(0.88 0.004 95);
-  --action-ink: oklch(0.182 0.004 95);
+  --action: oklch(0.962 0.005 255);
+  --action-hover: oklch(0.88 0.006 255);
+  --action-ink: oklch(0.182 0.006 255);
 
-  --neutral: oklch(0.725 0.006 95);
-  --neutral-tint: oklch(0.725 0.006 95 / 0.14);
+  --neutral: oklch(0.725 0.01 255);
+  --neutral-tint: oklch(0.725 0.01 255 / 0.14);
   --info: oklch(0.76 0.12 240);
   --info-tint: oklch(0.76 0.12 240 / 0.17);
   --purple: oklch(0.76 0.15 300);
@@ -133,7 +145,17 @@
   --danger: oklch(0.79 0.15 25);
   --danger-tint: oklch(0.79 0.15 25 / 0.17);
 
-  --chart-idle: oklch(0.32 0.006 95);
+  --chart-idle: oklch(0.32 0.01 255);
+  /* En sombre, le lime tient le contraste : il reprend le mois en cours. */
+  --chart-active: var(--brand);
+
+  /* Le rail s'enfonce sous le canevas sombre plutôt que de s'en détacher. */
+  --rail: oklch(0.145 0.006 258);
+  --rail-raised: oklch(0.23 0.01 258);
+  --rail-line: oklch(0.26 0.01 258);
+  --rail-ink: oklch(0.962 0.005 255);
+  --rail-ink-muted: oklch(0.725 0.01 255);
+  --rail-ink-subtle: oklch(0.645 0.01 255);
 
   --scrim: oklch(0 0 0 / 0.65);
 
@@ -190,11 +212,15 @@
   --color-subtle: var(--ink-subtle);
   --color-line-strong: var(--line-strong);
   --color-chart-idle: var(--chart-idle);
+  --color-chart-active: var(--chart-active);
+  --color-rail: var(--rail);
 
   --color-brand: var(--brand);
   --color-brand-hover: var(--brand-hover);
   --color-brand-ink: var(--brand-ink);
   --color-brand-tint: var(--brand-tint);
+  /* Le texte posé sur une teinte lime : l'encre, jamais le lime lui-même. */
+  --color-brand-text: var(--ink);
   --color-action: var(--action);
   --color-action-hover: var(--action-hover);
   --color-action-ink: var(--action-ink);
@@ -248,6 +274,15 @@
 }
 
 @layer base {
+  /* Tailwind v4 trace les bordures en currentColor : sans cette règle, chaque
+     `border-b` d'entête de carte devenait un trait noir (blanc en sombre). */
+  *,
+  ::before,
+  ::after,
+  ::backdrop {
+    border-color: var(--line);
+  }
+
   html {
     -webkit-text-size-adjust: 100%;
     -webkit-tap-highlight-color: transparent;
@@ -273,6 +308,27 @@
   }
 
   /* Les surfaces dessinées par le navigateur portent aussi le système. */
+  /*
+   * Le rail redéfinit les jetons de son périmètre : les composants de
+   * navigation gardent leurs classes (texte atténué, survol en surface,
+   * compteur en creux) et se lisent clair sur graphite.
+   */
+  .rail {
+    color-scheme: dark;
+    background-color: var(--rail);
+    --foreground: var(--rail-ink);
+    --ink: var(--rail-ink);
+    --muted-foreground: var(--rail-ink-muted);
+    --ink-subtle: var(--rail-ink-subtle);
+    --surface: var(--rail-raised);
+    --sunk: var(--rail-line);
+    --line: var(--rail-line);
+    --border: var(--rail-line);
+    --action: var(--rail-ink);
+    --action-ink: var(--rail);
+    --ring: var(--brand);
+  }
+
   ::selection {
     background: var(--brand-tint);
     color: var(--ink);

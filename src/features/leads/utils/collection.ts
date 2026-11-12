@@ -1,5 +1,6 @@
 import { formatFullName } from "@/lib/format";
 import type { Lead, LeadFilters, LeadSort, ValueBracket } from "../types";
+import { PRIORITY_RULES } from "./attention";
 
 /** Les bornes de chaque tranche de montant, en euros. */
 export const VALUE_BRACKETS: Record<
@@ -37,8 +38,10 @@ export function matchesSearch(lead: Lead, search: string): boolean {
  * Applique les filtres du tableau. Les critères se cumulent : un prospect doit
  * satisfaire la recherche, le statut, le montant et la période à la fois.
  */
-export function filterLeads(leads: Lead[], filters: LeadFilters): Lead[] {
+export function filterLeads(leads: Lead[], filters: LeadFilters, now: Date = new Date()): Lead[] {
+  const priority = filters.priority ? PRIORITY_RULES[filters.priority] : undefined;
   return leads.filter((lead) => {
+    if (priority && !priority.matches(lead, now)) return false;
     if (!matchesSearch(lead, filters.search)) return false;
     if (filters.statuses.length > 0 && !filters.statuses.includes(lead.status)) return false;
     if (!matchesValueBracket(lead.estimatedValue, filters.valueBracket)) return false;

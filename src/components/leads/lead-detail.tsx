@@ -1,8 +1,17 @@
 "use client";
 
 import * as React from "react";
-import Link from "next/link";
-import { ArrowLeft, Building2, CalendarDays, Clock, Loader2, Mail, Phone, Wallet } from "lucide-react";
+import { useRouter } from "next/navigation";
+import {
+  Building2,
+  CalendarDays,
+  Clock,
+  Loader2,
+  Mail,
+  Phone,
+  Trash2,
+  Wallet,
+} from "lucide-react";
 import { toast } from "sonner";
 import { useLeads } from "@/features/leads/api/leads-store";
 import { LEAD_STATUSES, type Activity, type Lead, type LeadStatus } from "@/features/leads/types";
@@ -25,8 +34,10 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { EmptyState } from "@/components/common/empty-state";
+import { EditLeadDialog } from "./edit-lead-dialog";
 import { LeadStatusBadge } from "./lead-status-badge";
 import { LeadTimeline } from "./lead-timeline";
+import { LeadsBackLink } from "./leads-back-link";
 
 interface LeadDetailProps {
   lead: Lead;
@@ -43,21 +54,32 @@ function InfoRow({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex items-start gap-3 px-4 py-3">
-      <Icon className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden />
-      <div className="min-w-0 flex-1">
-        <dt className="ui-label">{label}</dt>
-        <dd className="mt-0.5 break-words text-body text-foreground">{children}</dd>
-      </div>
+    // Le groupe dt/dd est l'enfant direct de la liste : l'icône vit dans le dt,
+    // la valeur s'aligne sous le libellé (16 px d'icône + 12 px d'écart).
+    <div className="px-4 py-3">
+      <dt className="ui-label flex items-center gap-3">
+        <Icon className="size-4 shrink-0 text-muted-foreground" aria-hidden />
+        {label}
+      </dt>
+      <dd className="mt-0.5 min-w-0 break-words pl-7 text-body text-foreground">{children}</dd>
     </div>
   );
 }
 
 export function LeadDetail({ lead: initialLead, initialActivities }: LeadDetailProps) {
-  const { leads, changeStatus, addNote } = useLeads();
+  const router = useRouter();
+  const { leads, changeStatus, addNote, removeMany, restoreDeleted } = useLeads();
   const lead = leads.find((entry) => entry.id === initialLead.id) ?? initialLead;
 
   const [activities, setActivities] = React.useState(initialActivities);
+  // Chaque écriture rafraîchit la page serveur : l'historique qu'elle renvoie
+  // fait foi et remplace les ajouts locaux, comparé pendant le rendu.
+  const [seenActivities, setSeenActivities] = React.useState(initialActivities);
+  if (seenActivities !== initialActivities) {
+    setSeenActivities(initialActivities);
+    setActivities(initialActivities);
+  }
+  const [deleting, setDeleting] = React.useState(false);
   const [statusPending, setStatusPending] = React.useState(false);
   const [note, setNote] = React.useState("");
   const [noteError, setNoteError] = React.useState<string | null>(null);
@@ -85,7 +107,24 @@ export function LeadDetail({ lead: initialLead, initialActivities }: LeadDetailP
         },
         ...current,
       ]);
-      toast.success(`Étape mise à jour : ${STATUS_CONFIG[status].label}.`);
+      const undo = {
+        label: "Annuler",
+        onClick: () => void applyStatus(previous),
+      };
+      if (status === "won") {
+        // Le seul moment de joie d'un CRM ne ressemble pas à un changement d'étape ordinaire.
+        toast.success(`Affaire signée : ${formatCurrency(updated.estimatedValue)} au chiffre d'affaires.`, {
+          description: `${formatFullName(lead.firstName, lead.lastName)} rejoint vos clients.`,
+          action: { label: "Voir les clients", onClick: () => router.push("/clients") },
+          cancel: undo,
+          duration: 8000,
+        });
+      } else {
+        toast.success(`Étape mise à jour : ${STATUS_CONFIG[status].label}.`, {
+          action: undo,
+          duration: 6000,
+        });
+      }
     } catch (error) {
       toast.error("L'étape n'a pas pu être modifiée.", {
         description: error instanceof Error ? error.message : undefined,
@@ -132,17 +171,42 @@ export function LeadDetail({ lead: initialLead, initialActivities }: LeadDetailP
     }
   }
 
+  async function remove() {
+    setDeleting(true);
+    try {
+      await removeMany([lead.id]);
+      router.push("/leads");
+      toast.success(`Fiche de ${formatFullName(lead.firstName, lead.lastName)} supprimée.`, {
+        duration: 8000,
+        action: {
+          label: "Annuler",
+          onClick: async () => {
+            try {
+              await restoreDeleted();
+              router.push(`/leads/${lead.id}`);
+            } catch (error) {
+              toast.error("La suppression n'a pas pu être annulée.", {
+                description: error instanceof Error ? error.message : undefined,
+              });
+            }
+          },
+        },
+      });
+    } catch (error) {
+      setDeleting(false);
+      toast.error("La suppression a échoué.", {
+        description: error instanceof Error ? error.message : undefined,
+      });
+    }
+  }
+
   const notes = [...lead.notes].reverse();
+  const phoneHref = lead.phone ? `tel:${lead.phone.replace(/\s/g, "")}` : null;
 
   return (
     <div className="space-y-5">
       <div>
-        <Button asChild variant="ghost" size="sm" className="-ml-2.5">
-          <Link href="/leads">
-            <ArrowLeft className="size-4" aria-hidden />
-            Retour au tableau
-          </Link>
-        </Button>
+        <LeadsBackLink />
 
         <div className="mt-2 flex flex-wrap items-end justify-between gap-x-6 gap-y-4">
           <div className="min-w-0">
@@ -157,13 +221,31 @@ export function LeadDetail({ lead: initialLead, initialActivities }: LeadDetailP
                 {lead.id}
               </span>
             </p>
+            {/* Entre deux rendez-vous, sur téléphone : appeler sans descendre jusqu'aux coordonnées. */}
+            <div className="mt-3 flex gap-2 xl:hidden">
+              {phoneHref ? (
+                <Button asChild variant="secondary" size="sm">
+                  <a href={phoneHref}>
+                    <Phone className="size-4" aria-hidden />
+                    Appeler
+                  </a>
+                </Button>
+              ) : null}
+              <Button asChild variant="secondary" size="sm">
+                <a href={`mailto:${lead.email}`}>
+                  <Mail className="size-4" aria-hidden />
+                  Écrire
+                </a>
+              </Button>
+            </div>
           </div>
 
-          <div className="flex items-center gap-2">
-            <label htmlFor="lead-status" className="ui-label whitespace-nowrap">
+          <div className="flex flex-wrap items-center gap-2">
+            {/* Sur téléphone, le libellé reste lu mais s'efface : sélecteur, Modifier et Supprimer tiennent sur une ligne. */}
+            <label htmlFor="lead-status" className="ui-label whitespace-nowrap max-sm:sr-only">
               Étape
             </label>
-            <div className="w-48">
+            <div className="w-36 sm:w-48">
               <Select value={lead.status} onValueChange={applyStatus} disabled={statusPending}>
                 <SelectTrigger id="lead-status" aria-describedby="lead-status-help">
                   <SelectValue>{STATUS_CONFIG[lead.status].label}</SelectValue>
@@ -183,6 +265,23 @@ export function LeadDetail({ lead: initialLead, initialActivities }: LeadDetailP
             <p id="lead-status-help" className="sr-only">
               {STATUS_CONFIG[lead.status].description}
             </p>
+            <span aria-hidden className="mx-1 hidden h-6 w-px bg-border sm:block" />
+            <EditLeadDialog lead={lead} />
+            <Button
+              variant="destructive"
+              size="icon"
+              type="button"
+              onClick={remove}
+              disabled={deleting}
+              aria-label={`Supprimer la fiche de ${formatFullName(lead.firstName, lead.lastName)}`}
+              title="Supprimer la fiche (annulable)"
+            >
+              {deleting ? (
+                <Loader2 className="size-4 animate-spin" aria-hidden />
+              ) : (
+                <Trash2 className="size-4" aria-hidden />
+              )}
+            </Button>
           </div>
         </div>
       </div>
@@ -284,7 +383,7 @@ export function LeadDetail({ lead: initialLead, initialActivities }: LeadDetailP
             <InfoRow icon={Mail} label="E-mail">
               <a
                 href={`mailto:${lead.email}`}
-                className="underline-offset-4 hover:underline"
+                className="underline decoration-line-strong underline-offset-4 transition-colors hover:decoration-current"
               >
                 {lead.email}
               </a>
@@ -294,7 +393,7 @@ export function LeadDetail({ lead: initialLead, initialActivities }: LeadDetailP
               {lead.phone ? (
                 <a
                   href={`tel:${lead.phone.replace(/\s/g, "")}`}
-                  className="underline-offset-4 hover:underline"
+                  className="underline decoration-line-strong underline-offset-4 transition-colors hover:decoration-current"
                 >
                   {lead.phone}
                 </a>

@@ -42,9 +42,9 @@ describe("rebaseLeads", () => {
 
   it("garde l'heure murale de Paris malgré le changement d'heure", () => {
     const [lead] = rebaseLeads([SEED_LEADS[0]], 56);
-    // 09:07 UTC en septembre (heure d'été) = 11:07 à Paris ; en novembre, 11:07 = 10:07 UTC.
-    expect(SEED_LEADS[0].createdAt).toBe("2026-09-15T09:07:00.000Z");
-    expect(lead.createdAt).toBe("2026-11-10T10:07:00.000Z");
+    // 06:02 UTC en septembre (heure d'été) = 08:02 à Paris ; en novembre, 08:02 = 07:02 UTC.
+    expect(SEED_LEADS[0].createdAt).toBe("2026-09-15T06:02:00.000Z");
+    expect(lead.createdAt).toBe("2026-11-10T07:02:00.000Z");
   });
 
   it("ne modifie pas le jeu d'origine", () => {

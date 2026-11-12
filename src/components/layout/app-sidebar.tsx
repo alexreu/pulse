@@ -13,9 +13,9 @@ export interface NavCounts {
 }
 
 /**
- * Le rail repose sur le même sol que le contenu : ce sont les cartes blanches
- * qui découpent la page, pas un fond de rail. La destination courante est un
- * pavé lime à encre noire, doublé par `aria-current`.
+ * Le rail est un bandeau graphite (classe `.rail`, qui redéfinit les jetons de
+ * son périmètre). La destination courante y est un pavé lime à encre
+ * graphite, doublé par `aria-current` : c'est là que le lime porte la marque.
  */
 export function SidebarNav({
   counts,
@@ -124,7 +124,7 @@ export function SidebarUser() {
 
 export function AppSidebar({ counts }: { counts: NavCounts }) {
   return (
-    <aside className="fixed inset-y-0 left-0 z-30 hidden w-[248px] flex-col lg:flex">
+    <aside className="rail fixed inset-y-0 left-0 z-30 hidden w-[248px] flex-col lg:flex">
       <SidebarBrand />
       <SidebarNav counts={counts} />
       <SidebarUser />

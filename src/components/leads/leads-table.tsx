@@ -26,6 +26,13 @@ import { LeadAvatar } from "./lead-avatar";
 import { LeadStatusBadge } from "./lead-status-badge";
 import { LeadsPagination } from "./leads-pagination";
 
+/** Les noms lus par un lecteur d'écran dans la légende du tableau. */
+const SORT_LABELS: Record<SortField, string> = {
+  name: "nom",
+  estimatedValue: "montant",
+  createdAt: "date de création",
+};
+
 interface LeadsTableProps {
   leads: Lead[];
   sort: LeadSort;
@@ -69,7 +76,7 @@ function SortButton({
       onClick={() => onSortChange(field)}
       aria-label={`Trier par ${label.toLowerCase()}, ordre ${nextDirection}`}
       className={cn(
-        "ui-label inline-flex items-center gap-1.5 whitespace-nowrap rounded-sm py-0.5 transition-colors duration-200 ease-out-soft hover:text-foreground",
+        "ui-label -my-1.5 inline-flex items-center gap-1.5 whitespace-nowrap rounded-sm py-2 transition-colors duration-200 ease-out-soft hover:text-foreground",
         isActive && "font-medium text-foreground",
         align === "right" && "flex-row-reverse",
       )}
@@ -130,7 +137,9 @@ export function LeadsTable({
             <div className="min-w-0">
               <Link
                 href={`/leads/${row.original.id}`}
-                className="block truncate font-medium text-foreground underline-offset-4 hover:underline"
+                // Le lien s'étend à toute la ligne (son ::after se cale sur le <tr>) :
+                // sur mobile, on touche la ligne, pas un nom de 22 px de haut.
+                className="block truncate font-medium text-foreground underline-offset-4 after:absolute after:inset-0 after:content-[''] hover:underline"
               >
                 {formatFullName(row.original.firstName, row.original.lastName)}
               </Link>
@@ -267,7 +276,7 @@ export function LeadsTable({
       <div className="overflow-x-auto">
         <table className="w-full border-collapse text-body md:min-w-[40rem]">
           <caption className="sr-only">
-            Prospects — {leads.length} lignes, triées par {sort.field}, ordre{" "}
+            Prospects — {leads.length} lignes, triées par {SORT_LABELS[sort.field]}, ordre{" "}
             {sort.direction === "asc" ? "croissant" : "décroissant"}
           </caption>
           <thead>
@@ -304,7 +313,7 @@ export function LeadsTable({
               <tr
                 key={row.id}
                 data-state={row.getIsSelected() ? "selected" : undefined}
-                className="transition-colors duration-150 hover:bg-muted data-[state=selected]:bg-info-tint"
+                className="relative transition-colors duration-150 hover:bg-muted data-[state=selected]:bg-info-tint"
               >
                 {row.getVisibleCells().map((cell) => (
                   <td
@@ -312,6 +321,8 @@ export function LeadsTable({
                     className={cn(
                       "px-2 py-2.5 align-middle sm:px-3",
                       cell.column.id === "select" && "pr-0",
+                      // Au-dessus du lien étendu de la ligne : ces cellules gardent leur propre action.
+                      ["select", "email", "actions"].includes(cell.column.id) && "relative z-10",
                       cell.column.id === "name" && "max-w-[11rem] sm:max-w-[16rem]",
                       cell.column.id === "company" && "max-w-[12rem]",
                       cell.column.id === "email" && "max-w-[15rem]",

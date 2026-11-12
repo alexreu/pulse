@@ -57,7 +57,7 @@ export function MobileNav({ counts }: { counts: NavCounts }) {
           onPointerUp={onPointerUp}
           onPointerCancel={onPointerCancel}
           onClickCapture={onClickCapture}
-          className="fixed inset-y-0 left-0 z-50 flex w-[280px] max-w-[85vw] touch-pan-y flex-col bg-background will-change-transform data-[state=open]:animate-in data-[state=open]:slide-in-from-left data-[state=closed]:animate-out data-[state=closed]:slide-out-to-left lg:hidden"
+          className="fixed inset-y-0 left-0 z-50 flex w-[280px] max-w-[85vw] rail touch-pan-y flex-col will-change-transform data-[state=open]:animate-in data-[state=open]:slide-in-from-left data-[state=closed]:animate-out data-[state=closed]:slide-out-to-left lg:hidden"
           aria-label="Navigation principale"
         >
           <DialogPrimitive.Title className="sr-only">Navigation principale</DialogPrimitive.Title>

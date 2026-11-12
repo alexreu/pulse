@@ -16,22 +16,22 @@ export const SEED_LEADS: Lead[] = [
     "phone": "06 12 44 87 90",
     "estimatedValue": 4500,
     "status": "qualified",
-    "createdAt": "2026-09-15T09:07:00.000Z",
+    "createdAt": "2026-09-15T06:02:00.000Z",
     "notes": [
       {
         "id": "LD-1001-N1",
-        "body": "Appel découverte terminé. Refonte complète du site vitrine, budget confirmé autour de 4 500 €.",
-        "createdAt": "2026-09-03T14:00:00.000Z",
+        "body": "Appel découverte terminé. Refonte complète du site vitrine, budget annoncé autour de 4 500 €.",
+        "createdAt": "2026-09-15T06:35:00.000Z",
         "author": "Alex Martin"
       },
       {
         "id": "LD-1001-N2",
-        "body": "Proposition envoyée. Emma revient vers nous après son comité du 18.",
-        "createdAt": "2026-09-04T14:23:00.000Z",
+        "body": "Besoin et budget confirmés au rendez-vous de cadrage. Emma présente le projet à son comité du 18 : proposition à préparer d'ici là.",
+        "createdAt": "2026-09-15T08:20:00.000Z",
         "author": "Alex Martin"
       }
     ],
-    "lastContactAt": "2026-09-15T11:13:00.000Z"
+    "lastContactAt": "2026-09-15T08:10:00.000Z"
   },
   {
     "id": "LD-1002",
@@ -227,7 +227,7 @@ export const SEED_LEADS: Lead[] = [
       },
       {
         "id": "LD-1010-N2",
-        "body": "Proposition chiffrée à 9 600 €, arbitrage budgétaire en cours.",
+        "body": "Proposition chiffrée à 9 600 €, arbitrage budgétaire en cours.",
         "createdAt": "2026-09-08T14:23:00.000Z",
         "author": "Alex Martin"
       }

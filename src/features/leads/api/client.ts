@@ -1,5 +1,5 @@
 import type { Activity, Lead, LeadStatus } from "../types";
-import type { LeadFormValues } from "../schemas/lead";
+import type { LeadEditValues, LeadFormValues } from "../schemas/lead";
 
 /** Erreur renvoyée par les route handlers, déjà rédigée pour l'utilisateur. */
 export class ApiError extends Error {
@@ -42,6 +42,10 @@ export function fetchActivities(): Promise<{ activities: Activity[] }> {
 
 export function postLead(values: LeadFormValues): Promise<{ lead: Lead }> {
   return request("/api/leads", { method: "POST", body: JSON.stringify(values) });
+}
+
+export function putLead(id: string, values: LeadEditValues): Promise<{ lead: Lead }> {
+  return request(`/api/leads/${id}`, { method: "PUT", body: JSON.stringify(values) });
 }
 
 export function patchLeadStatus(id: string, status: LeadStatus): Promise<{ lead: Lead }> {

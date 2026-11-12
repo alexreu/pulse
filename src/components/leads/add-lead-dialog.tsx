@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useRouter } from "next/navigation";
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
 import { useLeads } from "@/features/leads/api/leads-store";
@@ -26,6 +27,7 @@ interface AddLeadDialogProps {
  * et le piège dans la boîte tant qu'elle est ouverte.
  */
 export function AddLeadDialog({ trigger }: AddLeadDialogProps) {
+  const router = useRouter();
   const { createLead } = useLeads();
   const [open, setOpen] = React.useState(false);
   const [failure, setFailure] = React.useState<string | null>(null);
@@ -37,6 +39,9 @@ export function AddLeadDialog({ trigger }: AddLeadDialogProps) {
       setOpen(false);
       toast.success("Prospect créé.", {
         description: `${lead.firstName} ${lead.lastName} — ${lead.company}`,
+        // La suite naturelle d'une création : ouvrir la fiche, sans la chercher dans le tableau.
+        action: { label: "Ouvrir la fiche", onClick: () => router.push(`/leads/${lead.id}`) },
+        duration: 6000,
       });
     } catch (error) {
       setFailure(

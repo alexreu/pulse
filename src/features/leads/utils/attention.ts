@@ -1,6 +1,8 @@
 import { OPEN_STAGES } from "../types";
-import type { Lead, LeadStatus } from "../types";
+import type { Lead, LeadStatus, PriorityId } from "../types";
 import { calculatePipelineValue } from "./metrics";
+
+export type { PriorityId };
 
 const DAY = 86_400_000;
 
@@ -10,7 +12,7 @@ function daysSince(iso: string | undefined, now: Date): number | null {
 }
 
 export interface PriorityAction {
-  id: "stalled-proposals" | "untouched-new" | "aging-qualified";
+  id: PriorityId;
   label: string;
   /** Ce qui est en jeu, déjà rédigé. */
   detail: string;
@@ -20,51 +22,55 @@ export interface PriorityAction {
 }
 
 /**
+ * Les trois règles de relance. Le tableau de bord les compte ; le tableau des
+ * prospects les applique comme filtre, pour que le lien « 3 fiches » ouvre
+ * exactement ces trois fiches.
+ */
+export const PRIORITY_RULES: Record<
+  PriorityId,
+  { label: string; detail: string; matches: (lead: Lead, now: Date) => boolean }
+> = {
+  "stalled-proposals": {
+    label: "Relancer les propositions",
+    detail: "Sans réponse depuis 5 jours",
+    matches: (lead, now) =>
+      lead.status === "proposal" && (daysSince(lead.lastContactAt, now) ?? 99) >= 5,
+  },
+  "untouched-new": {
+    label: "Prendre contact",
+    detail: "Jamais contactés depuis 3 jours",
+    matches: (lead, now) => lead.status === "new" && (daysSince(lead.createdAt, now) ?? 0) >= 3,
+  },
+  "aging-qualified": {
+    label: "Faire avancer les qualifiés",
+    detail: "Sans échange depuis une semaine",
+    matches: (lead, now) =>
+      lead.status === "qualified" && (daysSince(lead.lastContactAt, now) ?? 99) >= 7,
+  },
+};
+
+export function isPriorityId(value: string): value is PriorityId {
+  return Object.hasOwn(PRIORITY_RULES, value);
+}
+
+/**
  * Ce qu'il faut traiter en premier, déduit des dates réelles du portefeuille :
  * aucune donnée nouvelle, seulement une lecture de l'existant.
  */
 export function getPriorityActions(leads: Lead[], now: Date = new Date()): PriorityAction[] {
   const actions: PriorityAction[] = [];
 
-  const stalled = leads.filter(
-    (lead) => lead.status === "proposal" && (daysSince(lead.lastContactAt, now) ?? 99) >= 5,
-  );
-  if (stalled.length > 0) {
+  for (const id of Object.keys(PRIORITY_RULES) as PriorityId[]) {
+    const rule = PRIORITY_RULES[id];
+    const matching = leads.filter((lead) => rule.matches(lead, now));
+    if (matching.length === 0) continue;
     actions.push({
-      id: "stalled-proposals",
-      label: "Relancer les propositions",
-      detail: "Sans réponse depuis 5 jours",
-      count: stalled.length,
-      value: stalled.reduce((total, lead) => total + lead.estimatedValue, 0),
-      href: "/leads?status=proposal",
-    });
-  }
-
-  const untouched = leads.filter(
-    (lead) => lead.status === "new" && (daysSince(lead.createdAt, now) ?? 0) >= 3,
-  );
-  if (untouched.length > 0) {
-    actions.push({
-      id: "untouched-new",
-      label: "Prendre contact",
-      detail: "Jamais contactés depuis 3 jours",
-      count: untouched.length,
-      value: untouched.reduce((total, lead) => total + lead.estimatedValue, 0),
-      href: "/leads?status=new",
-    });
-  }
-
-  const aging = leads.filter(
-    (lead) => lead.status === "qualified" && (daysSince(lead.lastContactAt, now) ?? 99) >= 7,
-  );
-  if (aging.length > 0) {
-    actions.push({
-      id: "aging-qualified",
-      label: "Faire avancer les qualifiés",
-      detail: "Sans échange depuis une semaine",
-      count: aging.length,
-      value: aging.reduce((total, lead) => total + lead.estimatedValue, 0),
-      href: "/leads?status=qualified",
+      id,
+      label: rule.label,
+      detail: rule.detail,
+      count: matching.length,
+      value: matching.reduce((total, lead) => total + lead.estimatedValue, 0),
+      href: `/leads?priorite=${id}`,
     });
   }
 

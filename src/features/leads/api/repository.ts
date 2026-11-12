@@ -185,6 +185,31 @@ export async function createLead(input: CreateLeadInput): Promise<Lead> {
   return lead;
 }
 
+export type UpdateLeadInput = Omit<CreateLeadInput, "status" | "notes">;
+
+export async function updateLead(id: string, input: UpdateLeadInput): Promise<Lead> {
+  await delay(380);
+  await consumeFailure();
+  const { ops, leads } = await readState();
+  if (!leads.some((entry) => entry.id === id)) throw notFound(id);
+
+  const op: JournalOp = {
+    k: "u",
+    t: Date.now(),
+    id,
+    f: input.firstName.trim(),
+    l: input.lastName.trim(),
+    co: input.company.trim(),
+    e: input.email.trim().toLowerCase(),
+    v: input.estimatedValue,
+  };
+  if (input.phone?.trim()) op.p = input.phone.trim();
+
+  const next = [...ops, op];
+  await writeJournal(next);
+  return replay(next).leads.find((entry) => entry.id === id)!;
+}
+
 export async function updateLeadStatus(id: string, status: LeadStatus): Promise<Lead> {
   await delay(320);
   await consumeFailure();

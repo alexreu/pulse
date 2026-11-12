@@ -27,6 +27,32 @@ export function createdActivity(lead: Lead): Activity {
   };
 }
 
+/** Les champs qu'une modification peut toucher, nommés comme l'utilisateur les lit. */
+const FIELD_LABELS = {
+  firstName: "prénom",
+  lastName: "nom",
+  company: "entreprise",
+  email: "e-mail",
+  phone: "téléphone",
+  estimatedValue: "montant",
+} as const;
+
+export type EditableField = keyof typeof FIELD_LABELS;
+
+export function updatedActivity(lead: Lead, fields: EditableField[], createdAt: string): Activity {
+  const names = fields.map((field) => FIELD_LABELS[field]);
+  const list = names.length > 1 ? `${names.slice(0, -1).join(", ")} et ${names.at(-1)}` : names[0];
+  return {
+    id: `${lead.id}-AU-${createdAt}`,
+    leadId: lead.id,
+    leadName: `${lead.firstName} ${lead.lastName}`,
+    company: lead.company,
+    type: "lead_updated",
+    createdAt,
+    summary: `Modification : ${list}.`,
+  };
+}
+
 export function noteActivity(lead: Lead, noteId: string, body: string, createdAt: string): Activity {
   return {
     id: `${noteId}-AN`,
@@ -68,8 +94,7 @@ const SCRIPTED: Array<{
   hoursBefore: number;
   summary: string;
 }> = [
-  { leadId: "LD-1001", type: "email_sent", hoursBefore: 30, summary: "Proposition commerciale envoyée par e-mail." },
-  { leadId: "LD-1001", type: "meeting_scheduled", hoursBefore: 6, summary: "Point de décision programmé avec Emma Laurent." },
+  { leadId: "LD-1001", type: "meeting_scheduled", hoursBefore: 1, summary: "Rendez-vous de cadrage programmé avec Emma Laurent." },
   { leadId: "LD-1003", type: "meeting_scheduled", hoursBefore: 20, summary: "Atelier de cadrage planifié avec le DSI." },
   { leadId: "LD-1005", type: "email_sent", hoursBefore: 14, summary: "Récapitulatif des deux lots envoyé." },
   { leadId: "LD-1007", type: "email_sent", hoursBefore: 48, summary: "Audit technique transmis en pièce jointe." },

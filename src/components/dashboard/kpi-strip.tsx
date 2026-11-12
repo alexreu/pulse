@@ -59,7 +59,8 @@ export function KpiStrip({ leads, revenue }: { leads: Lead[]; revenue: MonthlyRe
       <h2 id="kpi-heading" className="sr-only">
         Indicateurs clés
       </h2>
-      <div className="grid grid-cols-1 gap-px bg-border sm:grid-cols-2 xl:grid-cols-4">
+      {/* Deux colonnes dès le mobile : quatre cartes empilées remplissaient tout le premier écran. */}
+      <div className="grid grid-cols-2 gap-px bg-border xl:grid-cols-4">
         {items.map((item) => (
           <KpiCard key={item.label} {...item} className="bg-card" />
         ))}

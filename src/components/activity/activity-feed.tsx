@@ -2,7 +2,15 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { CalendarClock, FilePlus2, History, Mail, MessageSquareText, Milestone } from "lucide-react";
+import {
+  CalendarClock,
+  FilePlus2,
+  History,
+  Mail,
+  MessageSquareText,
+  Milestone,
+  PencilLine,
+} from "lucide-react";
 import type { Activity, ActivityType } from "@/features/leads/types";
 import { formatDateTime } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -12,6 +20,7 @@ import { ACTIVITY_LABELS } from "@/components/leads/lead-timeline";
 import { LeadStatusBadge } from "@/components/leads/lead-status-badge";
 
 const ICONS: Record<ActivityType, typeof Mail> = {
+  lead_updated: PencilLine,
   lead_created: FilePlus2,
   status_changed: Milestone,
   note_added: MessageSquareText,

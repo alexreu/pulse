@@ -9,6 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { PAGE_SIZES } from "@/features/leads/utils/query";
 
 interface LeadsPaginationProps {
   pageIndex: number;
@@ -19,7 +20,7 @@ interface LeadsPaginationProps {
   onPageSizeChange: (size: number) => void;
 }
 
-export const PAGE_SIZES = [10, 20, 50] as const;
+export { PAGE_SIZES };
 
 export function LeadsPagination({
   pageIndex,

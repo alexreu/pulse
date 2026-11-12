@@ -51,6 +51,7 @@ export interface Lead {
 
 export const ACTIVITY_TYPES = [
   "lead_created",
+  "lead_updated",
   "status_changed",
   "note_added",
   "email_sent",
@@ -82,6 +83,9 @@ export interface LeadSort {
   direction: SortDirection;
 }
 
+/** Les règles de relance de « À faire en premier » (voir `utils/attention`). */
+export type PriorityId = "stalled-proposals" | "untouched-new" | "aging-qualified";
+
 export interface LeadFilters {
   search: string;
   statuses: LeadStatus[];
@@ -89,6 +93,8 @@ export interface LeadFilters {
   /** Bornes ISO inclusives sur `createdAt`. */
   createdFrom?: string;
   createdTo?: string;
+  /** Une règle de relance : ne garde que les fiches qu'elle désigne. */
+  priority?: PriorityId;
 }
 
 export const EMPTY_FILTERS: LeadFilters = {

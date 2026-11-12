@@ -136,3 +136,45 @@ describe("encodeJournal / decodeJournal", () => {
     expect(decodeJournal(forged)).toHaveLength(1);
   });
 });
+
+describe("modification d'une fiche", () => {
+  const edit = (overrides: Partial<Extract<JournalOp, { k: "u" }>> = {}): JournalOp => ({
+    k: "u",
+    t: T,
+    id: "LD-1001",
+    f: "Emma",
+    l: "Laurent",
+    co: "Studio Bloom",
+    e: "emma@studio-bloom.fr",
+    p: "06 12 44 87 90",
+    v: 5200,
+    ...overrides,
+  });
+
+  it("applique les champs et nomme ce qui a changé dans l'historique", () => {
+    const { leads, activities } = replay([edit()], NOW);
+    expect(leads.find((lead) => lead.id === "LD-1001")).toMatchObject({
+      email: "emma@studio-bloom.fr",
+      estimatedValue: 5200,
+      status: "qualified",
+    });
+    expect(activities[0]).toMatchObject({
+      type: "lead_updated",
+      leadId: "LD-1001",
+      summary: "Modification : e-mail et montant.",
+    });
+  });
+
+  it("n'écrit rien quand rien ne change", () => {
+    const before = replay([], NOW).activities.length;
+    const { activities } = replay(
+      [edit({ e: "emma.laurent@studio-bloom.fr", v: 4500 })],
+      NOW,
+    );
+    expect(activities).toHaveLength(before);
+  });
+
+  it("survit à l'encodage dans le cookie", () => {
+    expect(decodeJournal(encodeJournal([edit()])!)).toEqual([edit()]);
+  });
+});

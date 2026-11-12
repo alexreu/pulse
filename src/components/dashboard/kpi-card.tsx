@@ -24,13 +24,13 @@ export function KpiCard({ label, value, detail, trend, icon, className }: KpiCar
   const word = direction === "up" ? "en hausse" : direction === "down" ? "en baisse" : "stable";
 
   return (
-    <div className={cn("flex flex-col gap-3 p-5", className)}>
-      <div className="flex items-center gap-2.5">
-        <IconTile icon={icon} size="sm" />
-        <h3 className="ui-label">{label}</h3>
+    <div className={cn("flex flex-col gap-3 p-4 sm:p-5", className)}>
+      <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1.5">
+        <IconTile icon={icon} size="sm" className="max-sm:hidden" />
+        <h3 className="ui-label max-sm:w-full">{label}</h3>
         <StatPill
           tone={direction === "up" ? "success" : direction === "down" ? "danger" : "neutral"}
-          className="ml-auto"
+          className="sm:ml-auto"
         >
           {formatSignedPercent(trend)}
           <span className="sr-only"> {word} sur un mois</span>
@@ -38,7 +38,7 @@ export function KpiCard({ label, value, detail, trend, icon, className }: KpiCar
       </div>
 
       <div>
-        <p data-slot="figure" className="ui-figure text-figure text-foreground">
+        <p data-slot="figure" className="ui-figure text-[1.375rem] leading-7 text-foreground sm:text-figure">
           {value}
         </p>
         <p className="mt-1 text-label text-subtle">{detail}</p>

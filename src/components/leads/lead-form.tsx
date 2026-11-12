@@ -1,11 +1,11 @@
 "use client";
 
 import * as React from "react";
-import { useForm } from "react-hook-form";
+import { useForm, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader2 } from "lucide-react";
 import { LEAD_STATUSES } from "@/features/leads/types";
-import { leadFormSchema, type LeadFormValues } from "@/features/leads/schemas/lead";
+import { leadEditSchema, leadFormSchema, type LeadFormValues } from "@/features/leads/schemas/lead";
 import { STATUS_CONFIG } from "@/features/leads/utils/status";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,8 +24,16 @@ interface LeadFormProps {
   onSubmit: (values: LeadFormValues) => Promise<void>;
   onCancel: () => void;
   submitLabel?: string;
+  /** Le libellé du bouton pendant l'envoi. */
+  pendingLabel?: string;
   /** Message d'échec affiché en tête du formulaire, dans le flux défilant. */
   banner?: React.ReactNode;
+  /**
+   * `edit` reprend les valeurs d'une fiche et retire l'étape et la note de
+   * départ : l'étape a son propre contrôle sur la fiche, les notes leur fil.
+   */
+  mode?: "create" | "edit";
+  defaultValues?: Partial<LeadFormValues>;
 }
 
 /**
@@ -44,12 +52,23 @@ const DEFAULTS = {
   notes: "",
 } satisfies Partial<LeadFormValues> as unknown as LeadFormValues;
 
+const CREATE_RESOLVER = zodResolver(leadFormSchema);
+/**
+ * Les valeurs de modification sont celles de création moins l'étape et la
+ * note : le formulaire garde un seul type, le schéma retire les deux champs.
+ */
+const EDIT_RESOLVER = zodResolver(leadEditSchema) as unknown as Resolver<LeadFormValues>;
+
 export function LeadForm({
   onSubmit,
   onCancel,
   submitLabel = "Créer le prospect",
+  pendingLabel = "Création…",
   banner,
+  mode = "create",
+  defaultValues,
 }: LeadFormProps) {
+  const isEdit = mode === "edit";
   const {
     register,
     handleSubmit,
@@ -58,8 +77,8 @@ export function LeadForm({
     setFocus,
     formState: { errors, isSubmitting },
   } = useForm<LeadFormValues>({
-    resolver: zodResolver(leadFormSchema),
-    defaultValues: DEFAULTS,
+    resolver: isEdit ? EDIT_RESOLVER : CREATE_RESOLVER,
+    defaultValues: { ...DEFAULTS, ...defaultValues },
     mode: "onSubmit",
   });
 
@@ -169,6 +188,7 @@ export function LeadForm({
               id="estimatedValue"
               type="number"
               min={1}
+              max={1_000_000}
               step={50}
               inputMode="numeric"
               aria-invalid={Boolean(errors.estimatedValue)}
@@ -177,49 +197,53 @@ export function LeadForm({
             />
           </Field>
 
-          <Field id="status" label="Étape" required error={errors.status?.message}>
-            <Select
-              value={status}
-              onValueChange={(next) =>
-                setValue("status", next as LeadFormValues["status"], { shouldValidate: true })
-              }
-            >
-              <SelectTrigger
-                id="status"
-                aria-invalid={Boolean(errors.status)}
-                aria-describedby={describedBy("status", errors.status?.message)}
+          {isEdit ? null : (
+            <Field id="status" label="Étape" required error={errors.status?.message}>
+              <Select
+                value={status}
+                onValueChange={(next) =>
+                  setValue("status", next as LeadFormValues["status"], { shouldValidate: true })
+                }
               >
-                <SelectValue placeholder="Choisir une étape" />
-              </SelectTrigger>
-              <SelectContent>
-                {LEAD_STATUSES.map((value) => (
-                  <SelectItem key={value} value={value}>
-                    {STATUS_CONFIG[value].label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </Field>
+                <SelectTrigger
+                  id="status"
+                  aria-invalid={Boolean(errors.status)}
+                  aria-describedby={describedBy("status", errors.status?.message)}
+                >
+                  <SelectValue placeholder="Choisir une étape" />
+                </SelectTrigger>
+                <SelectContent>
+                  {LEAD_STATUSES.map((value) => (
+                    <SelectItem key={value} value={value}>
+                      {STATUS_CONFIG[value].label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </Field>
+          )}
         </div>
 
-        <Field
-          id="notes"
-          label="Note de départ"
-          error={errors.notes?.message}
-          hint="Ce que vous savez déjà : contexte, besoin, échéance."
-        >
-          <Textarea
+        {isEdit ? null : (
+          <Field
             id="notes"
-            rows={3}
-            aria-invalid={Boolean(errors.notes)}
-            aria-describedby={describedBy(
-              "notes",
-              errors.notes?.message,
-              "Ce que vous savez déjà : contexte, besoin, échéance.",
-            )}
-            {...register("notes")}
-          />
-        </Field>
+            label="Note de départ"
+            error={errors.notes?.message}
+            hint="Ce que vous savez déjà : contexte, besoin, échéance."
+          >
+            <Textarea
+              id="notes"
+              rows={3}
+              aria-invalid={Boolean(errors.notes)}
+              aria-describedby={describedBy(
+                "notes",
+                errors.notes?.message,
+                "Ce que vous savez déjà : contexte, besoin, échéance.",
+              )}
+              {...register("notes")}
+            />
+          </Field>
+        )}
       </div>
 
       <DialogFooter>
@@ -230,7 +254,7 @@ export function LeadForm({
           {isSubmitting ? (
             <>
               <Loader2 className="size-4 animate-spin" aria-hidden />
-              Création…
+              {pendingLabel}
             </>
           ) : (
             submitLabel

@@ -4,6 +4,7 @@ import {
   Mail,
   MessageSquareText,
   Milestone,
+  PencilLine,
 } from "lucide-react";
 import type { Activity, ActivityType } from "@/features/leads/types";
 import { STATUS_CONFIG } from "@/features/leads/utils/status";
@@ -11,6 +12,7 @@ import { formatDateTime } from "@/lib/format";
 import { LeadStatusBadge } from "./lead-status-badge";
 
 const ICONS: Record<ActivityType, typeof Mail> = {
+  lead_updated: PencilLine,
   lead_created: FilePlus2,
   status_changed: Milestone,
   note_added: MessageSquareText,
@@ -19,6 +21,7 @@ const ICONS: Record<ActivityType, typeof Mail> = {
 };
 
 export const ACTIVITY_LABELS: Record<ActivityType, string> = {
+  lead_updated: "Fiche modifiée",
   lead_created: "Fiche créée",
   status_changed: "Étape modifiée",
   note_added: "Note ajoutée",

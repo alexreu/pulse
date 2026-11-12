@@ -41,7 +41,14 @@ export function RevenueChart({ data }: { data: MonthlyRevenue[] }) {
     <div>
       <div className="h-[260px] w-full sm:h-[300px]" aria-hidden>
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={data} margin={{ top: 8, right: 4, bottom: 0, left: -12 }} barCategoryGap="28%">
+          <BarChart
+            data={data}
+            // Le graphique est doublé d'un tableau pour les lecteurs d'écran : son calque
+            // clavier (Recharts 3) rendait focusable un contenu marqué aria-hidden.
+            accessibilityLayer={false}
+            margin={{ top: 8, right: 4, bottom: 0, left: -12 }}
+            barCategoryGap="28%"
+          >
             <CartesianGrid stroke="var(--line)" strokeWidth={1} vertical={false} />
             <XAxis
               dataKey="label"
@@ -58,14 +65,14 @@ export function RevenueChart({ data }: { data: MonthlyRevenue[] }) {
               tick={{ fill: "var(--ink-subtle)", fontSize: 11 }}
             />
             <Tooltip
-              cursor={{ fill: "var(--brand-tint)" }}
+              cursor={{ fill: "var(--sunk)" }}
               content={<ChartTooltip />}
             />
             <Bar dataKey="revenue" radius={[6, 6, 0, 0]} maxBarSize={44} isAnimationActive={false}>
               {data.map((entry, index) => (
                 <Cell
                   key={entry.month}
-                  fill={index === data.length - 1 ? "var(--brand)" : "var(--chart-idle)"}
+                  fill={index === data.length - 1 ? "var(--chart-active)" : "var(--chart-idle)"}
                 />
               ))}
             </Bar>
