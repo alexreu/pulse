@@ -1,5 +1,6 @@
 "use client";
 
+import * as React from "react";
 import {
   Bar,
   BarChart,
@@ -37,6 +38,10 @@ function ChartTooltip({
  * porte les mêmes chiffres pour les lecteurs d'écran.
  */
 export function RevenueChart({ data }: { data: MonthlyRevenue[] }) {
+  // Le survol fonce la colonne elle-même : un fond de curseur posé derrière
+  // avait la valeur des colonnes au repos, qui disparaissaient dedans.
+  const [hovered, setHovered] = React.useState<number | null>(null);
+
   return (
     <div>
       <div className="h-[260px] w-full sm:h-[300px]" aria-hidden>
@@ -48,6 +53,13 @@ export function RevenueChart({ data }: { data: MonthlyRevenue[] }) {
             accessibilityLayer={false}
             margin={{ top: 8, right: 4, bottom: 0, left: -12 }}
             barCategoryGap="28%"
+            onMouseMove={(state) => {
+              // Recharts rend un index en chaîne, ou rien : `Number(null)` vaudrait 0.
+              const raw = state?.activeTooltipIndex;
+              const index = raw === null || raw === undefined ? NaN : Number(raw);
+              setHovered(Number.isInteger(index) ? index : null);
+            }}
+            onMouseLeave={() => setHovered(null)}
           >
             <CartesianGrid stroke="var(--line)" strokeWidth={1} vertical={false} />
             <XAxis
@@ -65,14 +77,20 @@ export function RevenueChart({ data }: { data: MonthlyRevenue[] }) {
               tick={{ fill: "var(--ink-subtle)", fontSize: 11 }}
             />
             <Tooltip
-              cursor={{ fill: "var(--sunk)" }}
+              cursor={false}
               content={<ChartTooltip />}
             />
             <Bar dataKey="revenue" radius={[6, 6, 0, 0]} maxBarSize={44} isAnimationActive={false}>
               {data.map((entry, index) => (
                 <Cell
                   key={entry.month}
-                  fill={index === data.length - 1 ? "var(--chart-active)" : "var(--chart-idle)"}
+                  fill={
+                    index === data.length - 1
+                      ? "var(--chart-active)"
+                      : index === hovered
+                        ? "var(--ink-subtle)"
+                        : "var(--chart-idle)"
+                  }
                 />
               ))}
             </Bar>
